@@ -1,8 +1,8 @@
 
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0062)file:///Users/matiasfrancois/Downloads/caja_workshop_v7_1.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Caja Diaria — Work Shop</title>
 <style>
@@ -211,7 +211,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
 ::-webkit-scrollbar-thumb{background:var(--br);border-radius:3px}
 
 /* ===== LOGIN SCREEN ===== */
-.login-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center}
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;pointer-events:auto}
 .login-box{background:var(--sf);border:1px solid var(--br);border-radius:16px;padding:36px;width:360px;text-align:center}
 .login-logo{font-size:22px;font-weight:900;margin-bottom:6px}.login-logo span{color:var(--acc)}
 .login-sub{font-size:12px;color:var(--mut);margin-bottom:28px}
@@ -255,15 +255,15 @@ tbody td{padding:6px 8px;vertical-align:middle}
 
 <!-- LOGIN SCREEN -->
 <div class="login-screen" id="loginScreen">
-  <div class="login-box">
+  <div class="login-box" style="pointer-events:auto">
     <div class="login-logo">WORK <span>SHOP</span></div>
     <div class="login-sub">Sistema de Caja Diaria · Seleccioná tu usuario</div>
     <div class="login-btns">
-      <button class="login-btn login-laura" onclick="login('LAURA')">
+      <button class="login-btn login-laura" onclick="login(&#39;LAURA&#39;)">
         <div class="login-avatar">👩</div>
         <span>Laura</span>
       </button>
-      <button class="login-btn login-maggie" onclick="login('MAGGIE')">
+      <button class="login-btn login-maggie" onclick="login(&#39;MAGGIE&#39;)">
         <div class="login-avatar">👩‍💼</div>
         <span>Maggie</span>
       </button>
@@ -280,11 +280,11 @@ tbody td{padding:6px 8px;vertical-align:middle}
     <button class="btn-sm" onclick="showReportes()" style="border-color:var(--pur);color:var(--pur)">📊 Reportes</button>
     <span id="shBadge" class="shb shb-off">📊 Sheets: desconectado</span>
     <a id="btnSheet" class="btn-sheets" href="https://docs.google.com/spreadsheets/d/1KErfhJRbClP0eB2xM7TOPbj-AE3vSyNSWQtoo7Fp780" target="_blank">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
       Ver en Sheets
     </a>
-    <div class="fbadge" id="fechaHoy"></div>
-    <span id="reloj" style="font-size:12px;color:var(--mut)"></span>
+    <div class="fbadge" id="fechaHoy">Lunes, 29 de junio de 2026</div>
+    <span id="reloj" style="font-size:12px;color:var(--mut)">09:06:25 a. m.</span>
   </div>
 </header>
 
@@ -294,14 +294,14 @@ tbody td{padding:6px 8px;vertical-align:middle}
   <button class="btn-nav active" id="btnHoyNav" onclick="irHoy()">Hoy</button>
   <button class="btn-nav" onclick="navDia(1)" id="btnSig">Siguiente →</button>
   <input type="date" class="date-sel" id="datePicker" onchange="irFecha(this.value)">
-  <span class="fecha-nav-label" id="fechaNavLabel"></span>
+  <span class="fecha-nav-label" id="fechaNavLabel">Hoy, 29 de junio</span>
   <span class="hist-badge" id="histBadge" style="display:none">📅 Historial</span>
   <span class="dias-guardados" id="diasGuardados"></span>
 </div>
 
 <!-- BARRA MODO SOLO LECTURA -->
 <div class="readonly-bar" id="readonlyBar">
-  📅 Estás viendo el historial del <strong id="roFecha"></strong> — Solo lectura
+  📅 Estás viendo el historial del <strong id="roFecha">lunes, 29 de junio</strong> — Solo lectura
   <button class="btn-hoy" onclick="irHoy()">Volver a hoy →</button>
 </div>
 
@@ -343,13 +343,13 @@ tbody td{padding:6px 8px;vertical-align:middle}
     <div class="fld">
       <label>Tipo</label>
       <div class="tg">
-        <button class="tb" onclick="setTipo('COBRO',this)"><span class="ic">💰</span>Cobro cliente</button>
-        <button class="tb" onclick="setTipo('PAGO',this)"><span class="ic">💸</span>Pago proveedor</button>
-        <button class="tb" onclick="setTipo('DIVISA',this)"><span class="ic">💱</span>Compra divisas</button>
-        <button class="tb" onclick="setTipo('RETIRO',this)"><span class="ic">🏦</span>Retiro socio</button>
-        <button class="tb" onclick="setTipo('GASTO',this)"><span class="ic">🧾</span>Gasto / Varios</button>
-        <button class="tb" onclick="setTipo('HABER',this)"><span class="ic">👤</span>Haber empleado</button>
-        <button class="tb" onclick="setTipo('LOGISTICA',this)" style="grid-column:span 2"><span class="ic">🚛</span>Logística</button>
+        <button class="tb" onclick="setTipo(&#39;COBRO&#39;,this)"><span class="ic">💰</span>Cobro cliente</button>
+        <button class="tb" onclick="setTipo(&#39;PAGO&#39;,this)"><span class="ic">💸</span>Pago proveedor</button>
+        <button class="tb" onclick="setTipo(&#39;DIVISA&#39;,this)"><span class="ic">💱</span>Compra divisas</button>
+        <button class="tb" onclick="setTipo(&#39;RETIRO&#39;,this)"><span class="ic">🏦</span>Retiro socio</button>
+        <button class="tb" onclick="setTipo(&#39;GASTO&#39;,this)"><span class="ic">🧾</span>Gasto / Varios</button>
+        <button class="tb" onclick="setTipo(&#39;HABER&#39;,this)"><span class="ic">👤</span>Haber empleado</button>
+        <button class="tb" onclick="setTipo(&#39;LOGISTICA&#39;,this)" style="grid-column:span 2"><span class="ic">🚛</span>Logística</button>
       </div>
     </div>
     <div class="div-info" id="divInfo">💱 <strong>Compra de divisas:</strong> ingresá los USD que comprás. Los ARS salen de caja según cotización.</div>
@@ -357,8 +357,8 @@ tbody td{padding:6px 8px;vertical-align:middle}
     <div class="fld" id="fldMoneda">
       <label>Moneda</label>
       <div class="tog2">
-        <button class="t2b" id="bARS" onclick="setMoneda('ARS')" style="color:var(--ars);background:rgba(251,191,36,.1)">$ ARS</button>
-        <button class="t2b" id="bUSD" onclick="setMoneda('USD')" style="color:var(--mut)">u$ USD</button>
+        <button class="t2b" id="bARS" onclick="setMoneda(&#39;ARS&#39;)" style="color:var(--ars);background:rgba(251,191,36,.1)">$ ARS</button>
+        <button class="t2b" id="bUSD" onclick="setMoneda(&#39;USD&#39;)" style="color:var(--mut)">u$ USD</button>
       </div>
     </div>
     <div class="r2">
@@ -369,15 +369,15 @@ tbody td{padding:6px 8px;vertical-align:middle}
     <div class="fld" id="fldDir">
       <label>Dirección</label>
       <div class="tog2">
-        <button class="t2b" id="bIng" onclick="setDir('ING')" style="color:var(--mut)">▲ Ingreso</button>
-        <button class="t2b" id="bEgr" onclick="setDir('EGR')" style="color:var(--mut)">▼ Egreso</button>
+        <button class="t2b" id="bIng" onclick="setDir(&#39;ING&#39;)" style="color:var(--mut)">▲ Ingreso</button>
+        <button class="t2b" id="bEgr" onclick="setDir(&#39;EGR&#39;)" style="color:var(--mut)">▼ Egreso</button>
       </div>
     </div>
     <div class="fld">
       <label>Operadora</label>
       <div class="op-tog">
-        <button class="ob act" onclick="setOp('LAURA',this)">Laura</button>
-        <button class="ob" onclick="setOp('MAGGIE',this)">Maggie</button>
+        <button class="ob act" onclick="setOp(&#39;LAURA&#39;,this)">Laura</button>
+        <button class="ob" onclick="setOp(&#39;MAGGIE&#39;,this)">Maggie</button>
       </div>
     </div>
     <div class="r2">
@@ -397,12 +397,12 @@ tbody td{padding:6px 8px;vertical-align:middle}
         <button class="btn-con" onclick="conectar()">Conectar</button>
       </div>
       <div class="sh-hint">
-        Hoja del mes: <strong id="mesActual" style="color:var(--acc)"></strong><br>
+        Hoja del mes: <strong id="mesActual" style="color:var(--acc)">2026-06</strong><br>
         Cada mes queda en su propia hoja del spreadsheet.
       </div>
       <div class="sh-action-btns">
         <a href="https://docs.google.com/spreadsheets/d/1KErfhJRbClP0eB2xM7TOPbj-AE3vSyNSWQtoo7Fp780" target="_blank" class="btn-sh-action btn-sh-open">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M3 15h18M9 3v18"></path></svg>
           Abrir Spreadsheet
         </a>
         <button class="btn-sh-action btn-sh-fmt" onclick="reformatearSheets()">🎨 Aplicar tema oscuro</button>
@@ -431,7 +431,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
           <th>Ing. USD</th><th>Egr. USD</th><th>Saldo USD</th>
           <th>Notas</th><th style="min-width:130px">Acciones</th>
         </tr></thead>
-        <tbody id="tbody"><tr><td colspan="15"><div class="empty"><div class="eic">📋</div>Registrá el primer movimiento</div></td></tr></tbody>
+        <tbody id="tbody"><tr><td colspan="15"><div class="empty"><div class="eic">📋</div>Registrá el primer movimiento del día</div></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -441,7 +441,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
 <div class="mo" id="moCierre">
   <div class="md">
     <div class="ci-head">
-      <div class="ci-tit">📋 Cierre de Caja — <span id="cFecha" style="color:var(--acc)"></span></div>
+      <div class="ci-tit">📋 Cierre de Caja — <span id="cFecha" style="color:var(--acc)">29 de junio de 2026</span></div>
       <div class="ci-sub" id="cSub"></div>
     </div>
     <div class="ci-saldos">
@@ -473,7 +473,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
       <div class="ticket-preview" id="ticketPreview"></div>
       <div class="ticket-btns">
         <button class="btn-wa" onclick="compartirWA()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path></svg>
           Compartir WhatsApp
         </button>
         <button class="btn-copy" onclick="copiarTicket()">📋 Copiar</button>
@@ -482,7 +482,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
     <div class="ci-foot">
       <button class="btn-impr" onclick="window.print()">🖨 Imprimir</button>
       <button class="btn-csv-ci" onclick="exportCSV()">⬇ CSV</button>
-      <button class="btn-cerrar-dia" id="btnCerrarDia" onclick="cerrarDia()">✓ Cerrar día y pasar saldo</button>
+      <button class="btn-cerrar-dia" id="btnCerrarDia" onclick="cerrarDia()" style="display: block;">✓ Cerrar día y pasar saldo</button>
       <button class="btn-mc" onclick="closeCierre()">Cerrar</button>
     </div>
   </div>
@@ -940,14 +940,21 @@ _Work Shop · Sistema de Caja_`;
   document.getElementById('ticketPreview').textContent=ticketTexto;
 }
 function copiarTicket(){ navigator.clipboard.writeText(ticketTexto).then(()=>toast('✓ Texto copiado')); }
-function compartirWA(){ window.op
+function compartirWA(){ window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(ticketTexto),'_blank'); }
+
 // ===== LOGIN =====
 let operadoraActual = '';
 
 function login(usuario){
+  console.log('LOGIN CALLED with:', usuario);
   // Ocultar pantalla de login
   const ls = document.getElementById('loginScreen');
-  if(ls) ls.style.display='none';
+  console.log('loginScreen element:', ls);
+  if(ls) {
+    ls.style.display='none';
+    ls.style.visibility='hidden';
+    console.log('loginScreen hidden');
+  }
   
   // Guardar sesión
   operadoraActual = usuario;
@@ -971,8 +978,16 @@ function login(usuario){
   });
   
   // Cargar el día de hoy
-  if(!fechaActual) cargarDia(new Date());
-  else { render(); updSaldos(); }
+  try {
+    console.log('Calling cargarDia...');
+    if(!fechaActual) cargarDia(new Date());
+    else { render(); updSaldos(); }
+    console.log('cargarDia done');
+  } catch(err) {
+    console.error('Error in cargarDia:', err);
+    // Mostrar app de todas formas
+    document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-AR');
+  }
 }
 
 function setOpGlobal(o){ op = o; }
@@ -1084,7 +1099,6 @@ function exportarReporte(){
   a.download='reporte_ws_'+document.getElementById('repDesde').value+'_'+document.getElementById('repHasta').value+'.csv';
   a.click(); toast('✓ Reporte exportado');
 }
-en('https://api.whatsapp.com/send?text='+encodeURIComponent(ticketTexto),'_blank'); }
 
 // ===== CERRAR DÍA =====
 function cerrarDia(){
@@ -1229,9 +1243,10 @@ document.getElementById('asUrl').value = savedUrl;
     </div>
     <div class="ci-foot">
       <button class="btn-csv-ci" onclick="exportarReporte()">⬇ Exportar CSV</button>
-      <button class="btn-mc" onclick="document.getElementById('moReportes').classList.remove('show')">Cerrar</button>
+      <button class="btn-mc" onclick="document.getElementById(&#39;moReportes&#39;).classList.remove(&#39;show&#39;)">Cerrar</button>
     </div>
   </div>
 </div>
-</body>
-</html>
+
+
+</body></html>
