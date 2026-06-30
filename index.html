@@ -575,7 +575,7 @@ async function cargarDesdeSheets(d){
     const r = await fetch(asUrl, {
       method:'POST',
       body: JSON.stringify({action:'getMovimientos', sheet:hoja, fecha:fechaStr}),
-      headers:{'Content-Type':'application/json'}
+      headers:{'Content-Type':'text/plain;charset=utf-8'}
     });
     const data = await r.json();
     if(data.ok){
@@ -1184,14 +1184,14 @@ async function syncFila(mov){
   const nombreHoja=getMes(fechaActual);
   console.log('Sincronizando a hoja:', nombreHoja);
   const row=[mov.id,mov.fecha,mov.hora,mov.tipo,mov.desc,mov.cotiz,mov.monto,mov.moneda,mov.iA.toFixed(2),mov.eA.toFixed(2),mov.sARS.toFixed(2),mov.iU.toFixed(4),mov.eU.toFixed(4),mov.sUSD.toFixed(4),mov.op,mov.notas,mov.ok?'TRUE':'FALSE'];
-  try{ await fetch(asUrl,{method:'POST',body:JSON.stringify({action:'append',sheet:nombreHoja,row}),headers:{'Content-Type':'application/json'}}); }
+  try{ await fetch(asUrl,{method:'POST',body:JSON.stringify({action:'append',sheet:nombreHoja,row}),headers:{'Content-Type':'text/plain;charset=utf-8'}}); }
   catch(e){ console.warn('Sheets sync:',e); }
 }
 
 async function updVerif(i){
   if(!shOk) return;
   const m=movs[i];
-  try{ await fetch(asUrl,{method:'POST',body:JSON.stringify({action:'updateVerif',sheet:getMes(fechaActual),id:m.id,verificado:m.ok}),headers:{'Content-Type':'application/json'}}); }
+  try{ await fetch(asUrl,{method:'POST',body:JSON.stringify({action:'updateVerif',sheet:getMes(fechaActual),id:m.id,verificado:m.ok}),headers:{'Content-Type':'text/plain;charset=utf-8'}}); }
   catch(e){}
 }
 
@@ -1199,7 +1199,7 @@ async function reformatearSheets(){
   if(!shOk) return toast('Primero conectá con Sheets',1);
   toast('🎨 Aplicando formato...');
   try{
-    const r=await fetch(asUrl,{method:'POST',body:JSON.stringify({action:'formatSheet',sheet:getMes(fechaActual)}),headers:{'Content-Type':'application/json'}});
+    const r=await fetch(asUrl,{method:'POST',body:JSON.stringify({action:'formatSheet',sheet:getMes(fechaActual)}),headers:{'Content-Type':'text/plain;charset=utf-8'}});
     const d=await r.json();
     if(d.ok) toast('✓ Tema oscuro aplicado — '+d.filas+' filas');
     else toast('Error: '+d.error,1);
