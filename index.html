@@ -210,17 +210,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--br);border-radius:3px}
 
-/* ===== LOGIN SCREEN ===== */
-.login-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;pointer-events:auto}
-.login-box{background:var(--sf);border:1px solid var(--br);border-radius:16px;padding:36px;width:360px;text-align:center}
-.login-logo{font-size:22px;font-weight:900;margin-bottom:6px}.login-logo span{color:var(--acc)}
-.login-sub{font-size:12px;color:var(--mut);margin-bottom:28px}
-.login-btns{display:flex;flex-direction:column;gap:10px}
-.login-btn{padding:14px;border-radius:10px;border:none;font-size:15px;font-weight:800;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:10px}
-.login-btn:hover{transform:translateY(-2px)}
-.login-laura{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff}
-.login-maggie{background:linear-gradient(135deg,#10b981,#06b6d4);color:#fff}
-.login-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(255,255,255,.2)}
+
 .op-indicator{display:none;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid}
 .op-indicator.show{display:flex}
 .op-laura{color:#818cf8;border-color:#818cf8;background:rgba(129,140,248,.08)}
@@ -253,29 +243,13 @@ tbody td{padding:6px 8px;vertical-align:middle}
 <body>
 
 
-<!-- LOGIN SCREEN -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-box" style="pointer-events:auto">
-    <div class="login-logo">WORK <span>SHOP</span></div>
-    <div class="login-sub">Sistema de Caja Diaria · Seleccioná tu usuario</div>
-    <div class="login-btns">
-      <button class="login-btn login-laura" onclick="login('LAURA')">
-        <div class="login-avatar">👩</div>
-        <span>Laura</span>
-      </button>
-      <button class="login-btn login-maggie" onclick="login('MAGGIE')">
-        <div class="login-avatar">👩‍💼</div>
-        <span>Maggie</span>
-      </button>
-    </div>
-  </div>
-</div>
 <header>
   <div class="logo">WORK <span>SHOP</span> · Caja</div>
   <div class="hdr-r">
-    <div class="op-indicator" id="opIndicator">
-      <span id="opAvatar"></span><span id="opName"></span>
-      <button onclick="logout()" style="background:none;border:none;cursor:pointer;color:inherit;font-size:10px;margin-left:2px;opacity:.7">✕</button>
+    <div style="display:flex;align-items:center;gap:5px">
+      <span style="font-size:11px;color:var(--mut)">Usuario:</span>
+      <button onclick="setUsuario('LAURA')" id="btnLaura" style="padding:4px 12px;border-radius:8px;border:1.5px solid var(--br);background:var(--sf2);color:var(--mut);font-size:12px;font-weight:800;cursor:pointer;transition:all .14s">👩 Laura</button>
+      <button onclick="setUsuario('MAGGIE')" id="btnMaggie" style="padding:4px 12px;border-radius:8px;border:1.5px solid var(--br);background:var(--sf2);color:var(--mut);font-size:12px;font-weight:800;cursor:pointer;transition:all .14s">👩‍💼 Maggie</button>
     </div>
     <button class="btn-sm" onclick="showReportes()" style="border-color:var(--pur);color:var(--pur)">📊 Reportes</button>
     <span id="shBadge" class="shb shb-off">📊 Sheets: desconectado</span>
@@ -662,7 +636,7 @@ function initUI(){
   document.getElementById('cFecha').textContent=n.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
   document.getElementById('mesActual').textContent=getMes(n);
   actualizarDiasGuardados();
-  // NO llamar cargarDia aqui - se llama despues del login
+  cargarDia(new Date());
 }
 initUI();
 
@@ -995,33 +969,25 @@ _Work Shop · Sistema de Caja_`;
 function copiarTicket(){ navigator.clipboard.writeText(ticketTexto).then(()=>toast('✓ Texto copiado')); }
 function compartirWA(){ window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(ticketTexto),'_blank'); }
 
-// ===== LOGIN =====
-let operadoraActual = '';
+// ===== SELECTOR DE USUARIO =====
+let operadoraActual = localStorage.getItem('ws_op_session') || 'LAURA';
 
-function login(usuario){
-  console.log('LOGIN CALLED with:', usuario);
-  // Ocultar pantalla de login
-  const ls = document.getElementById('loginScreen');
-  console.log('loginScreen element:', ls);
-  if(ls) {
-    ls.style.display='none';
-    ls.style.visibility='hidden';
-    console.log('loginScreen hidden');
-  }
-  
-  // Guardar sesión
+function setUsuario(usuario){
   operadoraActual = usuario;
-  op = usuario; // actualizar variable global
+  op = usuario;
   localStorage.setItem('ws_op_session', usuario);
   
-  // Actualizar indicador en header
-  const ind = document.getElementById('opIndicator');
-  if(ind){
-    const colors = {LAURA:'op-laura', MAGGIE:'op-maggie'};
-    const avatars = {LAURA:'👩', MAGGIE:'👩‍💼'};
-    ind.className = 'op-indicator show ' + (colors[usuario]||'');
-    document.getElementById('opAvatar').textContent = avatars[usuario]||'👤';
-    document.getElementById('opName').textContent = usuario==='LAURA'?'Laura':'Maggie';
+  // Actualizar botones del header
+  const bL = document.getElementById('btnLaura');
+  const bM = document.getElementById('btnMaggie');
+  if(bL && bM){
+    if(usuario==='LAURA'){
+      bL.style.background='rgba(99,102,241,.2)'; bL.style.color='#818cf8'; bL.style.borderColor='#818cf8';
+      bM.style.background='var(--sf2)'; bM.style.color='var(--mut)'; bM.style.borderColor='var(--br)';
+    } else {
+      bM.style.background='rgba(16,185,129,.15)'; bM.style.color='var(--grn)'; bM.style.borderColor='var(--grn)';
+      bL.style.background='var(--sf2)'; bL.style.color='var(--mut)'; bL.style.borderColor='var(--br)';
+    }
   }
   
   // Actualizar botones de operadora en el form
@@ -1030,41 +996,12 @@ function login(usuario){
     b.classList.toggle('act', onclick.includes("'"+usuario+"'"));
   });
   
-  // Auto-conectar Sheets si hay URL guardada y cargar el día
-  const urlGuardada = localStorage.getItem('ws_asUrl') || document.getElementById('asUrl').value.trim();
-  if(urlGuardada){
-    asUrl = urlGuardada;
-    // Verificar conexión y cargar desde Sheets
-    fetch(urlGuardada)
-      .then(r => r.json())
-      .then(d => {
-        if(d.ok){
-          shOk = true;
-          document.getElementById('shBadge').className='shb shb-ok';
-          document.getElementById('shBadge').textContent='📊 Sheets: conectado';
-        }
-        cargarDia(new Date());
-      })
-      .catch(() => {
-        // Si falla Sheets, cargar desde localStorage igual
-        cargarDia(new Date());
-      });
-  } else {
-    cargarDia(new Date());
-  }
+  toast('Usuario: ' + (usuario==='LAURA'?'Laura':'Maggie'));
 }
 
-function setOpGlobal(o){ op = o; }
-
-function logout(){
-  localStorage.removeItem('ws_op_session');
-  document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('opIndicator').className='op-indicator';
-}
-
-(function checkSession(){
-  const saved = localStorage.getItem('ws_op_session');
-  if(saved && (saved==='LAURA'||saved==='MAGGIE')){ login(saved); }
+// Inicializar con usuario guardado
+(function initUsuario(){
+  setUsuario(operadoraActual);
 })();
 
 // ===== REPORTES =====
