@@ -253,7 +253,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
     </div>
     <button class="btn-sm" onclick="showReportes()" style="border-color:var(--pur);color:var(--pur)">📊 Reportes</button>
     <span id="shBadge" class="shb shb-off">📊 Sheets: desconectado</span>
-    <a id="btnSheet" class="btn-sheets" href="https://docs.google.com/spreadsheets/d/1KErfhJRbClP0eB2xM7TOPbj-AE3vSyNSWQtoo7Fp780" target="_blank">
+    <a id="btnSheet" class="btn-sheets" href="https://docs.google.com/spreadsheets/d/1n0imhndBjCntHD3d-qUcaKpyosUDqnOmyZL0ZBIi-_g" target="_blank">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
       Ver en Sheets
     </a>
@@ -375,7 +375,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
         Cada mes queda en su propia hoja del spreadsheet.
       </div>
       <div class="sh-action-btns">
-        <a href="https://docs.google.com/spreadsheets/d/1KErfhJRbClP0eB2xM7TOPbj-AE3vSyNSWQtoo7Fp780" target="_blank" class="btn-sh-action btn-sh-open">
+        <a href="https://docs.google.com/spreadsheets/d/1n0imhndBjCntHD3d-qUcaKpyosUDqnOmyZL0ZBIi-_g" target="_blank" class="btn-sh-action btn-sh-open">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
           Abrir Spreadsheet
         </a>
@@ -471,7 +471,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
 // Estructura: { saldoIniARS, saldoIniUSD, movimientos:[] }
 // ============================================================
 
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1KErfhJRbClP0eB2xM7TOPbj-AE3vSyNSWQtoo7Fp780';
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1n0imhndBjCntHD3d-qUcaKpyosUDqnOmyZL0ZBIi-_g';
 
 // Estado global
 let movs=[], tipo=null, moneda='ARS', dir=null, op='';
@@ -484,7 +484,12 @@ let ticketTexto='';
 // ===== CLAVE DE STORAGE =====
 function claveLS(d){ return 'ws_dia_'+fmtKey(d); }
 function fmtKey(d){ return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; }
-function getMes(d){ const n=d||fechaActual; return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; }
+function getMes(d){
+  const n=d||fechaActual;
+  const meses=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+               'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  return meses[n.getMonth()] + ' ' + n.getFullYear();
+}
 function esHoy(d){ const h=new Date(); return d.toDateString()===h.toDateString(); }
 
 // ===== GUARDAR DÍA EN localStorage =====
@@ -646,7 +651,7 @@ function initUI(){
   document.getElementById('fechaHoy').textContent=d[0].toUpperCase()+d.slice(1);
   document.getElementById('horaI').value=n.toTimeString().slice(0,5);
   document.getElementById('cFecha').textContent=n.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('mesActual').textContent=getMes(n);
+  document.getElementById('mesActual').textContent=getMes(new Date());
   actualizarDiasGuardados();
   cargarDia(new Date());
 }
