@@ -503,13 +503,7 @@ function cargarDia(d){
   fechaActual=d;
   modoHistorial=!esHoy(d);
 
-  if(shOk){
-    // ── MODO SHEETS: cargar desde Google Sheets ──
-    cargarDesdeSheets(d);
-    return; // cargarDesdeSheets llama a finalizarCargaDia()
-  }
-
-  // ── MODO LOCAL: cargar desde localStorage ──
+  // ── SIEMPRE: primero cargar local para mostrar datos inmediatamente ──
   const raw=localStorage.getItem(claveLS(d));
   if(raw){
     try{
@@ -538,6 +532,24 @@ function cargarDia(d){
 
   // Actualizar UI via función compartida
   finalizarCargaDia(d);
+  // Sincronizar con Sheets en segundo plano si está conectado
+  if(shOk) sincronizarEnSegundoPlano(d);
+}
+
+async function sincronizarEnSegundoPlano(d){
+  const hoja=getMes(d);
+  const fechaStr=d.toLocaleDateString('es-AR');
+  try{
+    const r=await fetch(asUrl,{method:'POST',body:JSON.stringify({action:'getMovimientos',sheet:hoja,fecha:fechaStr}),headers:{'Content-Type':'text/plain;charset=utf-8'}});
+    const data=await r.json();
+    if(data.ok && data.movimientos && data.movimientos.length>=movs.length){
+      movs=data.movimientos;
+      if(data.saldoIniARS!==undefined){ saldoIniARS=data.saldoIniARS; saldoIniUSD=data.saldoIniUSD; }
+      sARS=saldoIniARS; sUSD=saldoIniUSD;
+      movs.forEach(m=>{ sARS+=m.iA-m.eA; sUSD+=m.iU-m.eU; m.sARS=sARS; m.sUSD=sUSD; });
+      guardarDia(); render(); updSaldos();
+    }
+  }catch(e){ console.warn('Sync BG error:',e); }
 }
 
 // ===== CARGA DESDE SHEETS (fuente central) =====
@@ -999,9 +1011,27 @@ function setUsuario(usuario){
   toast('Usuario: ' + (usuario==='LAURA'?'Laura':'Maggie'));
 }
 
-// Inicializar con usuario guardado
+// Inicializar con usuario guardado y auto-conectar Sheets
 (function initUsuario(){
   setUsuario(operadoraActual);
+  // Auto-conectar Sheets en segundo plano si hay URL guardada
+  const urlGuardada = localStorage.getItem('ws_asUrl');
+  if(urlGuardada){
+    asUrl = urlGuardada;
+    document.getElementById('asUrl').value = urlGuardada;
+    fetch(urlGuardada)
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.ok){
+          shOk=true;
+          document.getElementById('shBadge').className='shb shb-ok';
+          document.getElementById('shBadge').textContent='📊 Sheets: conectado';
+          // Sincronizar datos en segundo plano
+          if(fechaActual) sincronizarEnSegundoPlano(fechaActual);
+        }
+      })
+      .catch(()=>{});
+  }
 })();
 
 // ===== REPORTES =====
@@ -1128,9 +1158,9 @@ async function conectar(){
     document.getElementById('shBadge').className='shb shb-ok';
     document.getElementById('shBadge').textContent='📊 Sheets: conectado';
     localStorage.setItem('ws_asUrl', url);
-    toast('✓ Conectado · Cargando datos del día...');
-    // Recargar inmediatamente desde Sheets
-    setTimeout(()=>cargarDesdeSheets(fechaActual||new Date()), 300);
+    toast('✓ Sheets conectado');
+    // Sincronizar en segundo plano sin borrar datos locales
+    setTimeout(()=>sincronizarEnSegundoPlano(fechaActual||new Date()), 500);
   }catch(e){ toast('Error: '+e.message,1); }
 }
 
