@@ -56,7 +56,7 @@ header{background:var(--sf);border-bottom:1px solid var(--br);padding:10px 20px;
 .si-input-usd{color:var(--usd);width:90px}
 
 /* LAYOUT */
-.main{display:grid;grid-template-columns:370px 1fr;height:calc(100vh - 148px)}
+.main{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 148px)}
 
 /* FORM */
 .fp{background:var(--sf);border-right:1px solid var(--br);padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:11px}
@@ -100,12 +100,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
 .btn-sm:hover{border-color:var(--acc);color:var(--acc)}
 .btn-ci{border-color:var(--grn)!important;color:var(--grn)!important}
 .btn-ci:hover{background:rgba(16,185,129,.08)!important}
-.tw{overflow:auto;flex:1}
+.tw{overflow:auto;flex:1;position:relative}
 table{width:100%;border-collapse:collapse;font-size:11.5px}
 thead th{background:var(--sf);padding:7px 8px;text-align:left;font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0;border-bottom:1px solid var(--br);white-space:nowrap;z-index:1}
 tbody tr{border-bottom:1px solid rgba(46,51,80,.3);transition:background .1s}
-tbody tr:hover{background:rgba(59,130,246,.03)}
-tbody tr.verified{background:rgba(16,185,129,.04)}
+tbody tr:hover{background:rgba(59,130,246,.03)} tbody tr:hover td[style*='sticky']{background:rgba(59,130,246,.05)!important}
+tbody tr.verified{background:rgba(16,185,129,.04)} tbody tr.verified td[style*='sticky']{background:rgba(16,185,129,.06)!important}
 tbody td{padding:6px 8px;vertical-align:middle}
 
 .chip{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:900;letter-spacing:.3px}
@@ -315,7 +315,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
           <th>Cotiz.</th><th>Monto</th>
           <th>Ing. ARS</th><th>Egr. ARS</th><th>Saldo ARS</th>
           <th>Ing. USD</th><th>Egr. USD</th><th>Saldo USD</th>
-          <th>Notas</th><th>Acciones</th>
+          <th>Notas</th><th style="position:sticky;right:0;background:var(--sf);z-index:2;box-shadow:-2px 0 4px rgba(0,0,0,.3)">Acciones</th>
         </tr></thead>
         <tbody id="tbody"><tr><td colspan="15"><div class="empty"><div class="eic">📋</div>Registrá el primer movimiento</div></td></tr></tbody>
       </table>
@@ -820,7 +820,7 @@ function render(){
       <td>${iA}</td><td>${eA}</td><td>${sA}</td>
       <td>${iU}</td><td>${eU}</td><td>${sU}</td>
       <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
-      <td>${acciones}</td>
+      <td style="position:sticky;right:0;background:inherit;box-shadow:-2px 0 4px rgba(0,0,0,.2)">${acciones}</td>
     </tr>`;
   }).join('');
   const n=movs.length, v=movs.filter(m=>m.ok).length;
