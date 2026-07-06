@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Caja Diaria — Work Shop</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#0f1117;--sf:#1a1d27;--sf2:#22263a;--sf3:#1e2235;
@@ -16,28 +17,33 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--fnt);background:var(--bg);color:var(--txt);min-height:100vh}
 
-header{background:var(--sf);border-bottom:1px solid var(--br);padding:11px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+/* HEADER */
+header{background:var(--sf);border-bottom:1px solid var(--br);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo{font-size:16px;font-weight:900}.logo span{color:var(--acc)}
-.hdr-r{display:flex;align-items:center;gap:8px}
+.hdr-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .fbadge{background:var(--sf2);border:1px solid var(--br);padding:3px 10px;border-radius:20px;font-weight:600;font-size:12px}
-.shb{font-size:11px;padding:3px 10px;border-radius:12px;border:1px solid}
-.shb-ok{color:var(--grn);border-color:var(--grn);background:rgba(16,185,129,.08)}
-.shb-off{color:var(--orn);border-color:var(--orn);background:rgba(245,158,11,.08)}
-.btn-sheets{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:8px;border:1px solid #34a853;background:rgba(52,168,83,.1);color:#34a853;font-size:11px;font-weight:800;cursor:pointer;text-decoration:none;transition:all .14s}
-.btn-sheets:hover{background:rgba(52,168,83,.2)}
+.sync-badge{font-size:11px;padding:3px 10px;border-radius:12px;border:1px solid}
+.sync-ok{color:var(--grn);border-color:var(--grn);background:rgba(16,185,129,.08)}
+.sync-off{color:var(--orn);border-color:var(--orn);background:rgba(245,158,11,.08)}
+
+/* USER SELECTOR */
+.user-sel{display:flex;align-items:center;gap:5px}
+.user-sel span{font-size:11px;color:var(--mut)}
+.ubtn{padding:4px 12px;border-radius:8px;border:1.5px solid var(--br);background:var(--sf2);color:var(--mut);font-size:12px;font-weight:800;cursor:pointer;transition:all .14s}
+.ubtn.laura-act{border-color:#818cf8;background:rgba(129,140,248,.15);color:#818cf8}
+.ubtn.maggie-act{border-color:var(--grn);background:rgba(16,185,129,.12);color:var(--grn)}
 
 /* DATE NAV */
-.date-nav{background:var(--sf2);border-bottom:1px solid var(--br);padding:7px 20px;display:flex;align-items:center;gap:10px}
+.date-nav{background:var(--sf2);border-bottom:1px solid var(--br);padding:7px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .btn-nav{padding:4px 10px;border-radius:5px;border:1px solid var(--br);background:var(--sf);color:var(--mut);font-size:12px;font-weight:700;cursor:pointer;transition:all .14s}
-.btn-nav:hover{border-color:var(--acc);color:var(--acc)}
-.btn-nav.active{border-color:var(--acc);background:rgba(59,130,246,.12);color:var(--acc)}
+.btn-nav:hover,.btn-nav.active{border-color:var(--acc);color:var(--acc);background:rgba(59,130,246,.08)}
 .date-sel{background:var(--sf);border:1px solid var(--br);border-radius:5px;padding:4px 9px;color:var(--txt);font-size:12px;font-family:var(--fnt)}
-.date-sel:focus{outline:none;border-color:var(--acc)}
-.fecha-nav-label{font-size:12px;font-weight:700;color:var(--txt)}
 .hist-badge{font-size:10px;color:var(--orn);background:rgba(245,158,11,.1);border:1px solid var(--orn);border-radius:4px;padding:2px 7px;font-weight:700}
-.dias-guardados{font-size:10px;color:var(--mut)}
+.readonly-bar{display:none;background:rgba(245,158,11,.08);border-bottom:1px solid rgba(245,158,11,.3);padding:6px 20px;font-size:12px;color:var(--orn);align-items:center;gap:10px}
+.readonly-bar.show{display:flex}
+.btn-hoy{padding:4px 12px;border-radius:5px;border:1px solid var(--orn);background:rgba(245,158,11,.1);color:var(--orn);font-size:11px;font-weight:700;cursor:pointer}
 
-/* SALDOS BAR */
+/* SALDOS */
 .sbar{background:var(--sf);border-bottom:1px solid var(--br);padding:8px 20px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 .sc{display:flex;flex-direction:column;gap:1px}
 .sl{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.7px}
@@ -45,18 +51,12 @@ header{background:var(--sf);border-bottom:1px solid var(--br);padding:11px 20px;
 .svs{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 .sv-ars{color:var(--ars)}.sv-usd{color:var(--usd)}
 .sepv{width:1px;background:var(--br);align-self:stretch}
-.si-input{background:transparent;border:none;border-bottom:1px dashed var(--br);color:var(--ars);font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;width:120px;padding:1px 4px;font-family:var(--fnt)}
+.si-input{background:transparent;border:none;border-bottom:1px dashed var(--br);color:var(--ars);font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;width:110px;padding:1px 4px;font-family:var(--fnt)}
 .si-input:focus{outline:none;border-bottom-color:var(--ars)}
 .si-input-usd{color:var(--usd);width:90px}
 
-/* MODO SOLO LECTURA */
-.readonly-bar{display:none;background:rgba(245,158,11,.08);border-bottom:1px solid rgba(245,158,11,.3);padding:6px 20px;font-size:12px;color:var(--orn);align-items:center;gap:10px}
-.readonly-bar.show{display:flex}
-.btn-hoy{padding:4px 12px;border-radius:5px;border:1px solid var(--orn);background:rgba(245,158,11,.1);color:var(--orn);font-size:11px;font-weight:700;cursor:pointer}
-.btn-hoy:hover{background:rgba(245,158,11,.2)}
-
 /* LAYOUT */
-.main{display:grid;grid-template-columns:375px 1fr;flex:1}
+.main{display:grid;grid-template-columns:370px 1fr;height:calc(100vh - 148px)}
 
 /* FORM */
 .fp{background:var(--sf);border-right:1px solid var(--br);padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:11px}
@@ -74,6 +74,7 @@ header{background:var(--sf);border-bottom:1px solid var(--br);padding:11px 20px;
 .tb.ar{border-color:var(--pur);background:rgba(167,139,250,.08);color:var(--pur)}
 .tb.ag{border-color:var(--orn);background:rgba(245,158,11,.08);color:var(--orn)}
 .tb.ah{border-color:var(--blu);background:rgba(96,165,250,.08);color:var(--blu)}
+.tb.al{border-color:#ec4899;background:rgba(236,72,153,.08);color:#ec4899}
 
 .fld{display:flex;flex-direction:column;gap:4px}
 label{font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
@@ -82,32 +83,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tog2{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--br);border-radius:6px;overflow:hidden}
 .t2b{padding:7px;text-align:center;font-size:12px;font-weight:800;cursor:pointer;background:var(--sf2);color:var(--mut);border:none;transition:all .14s}
-.op-tog{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-.ob{padding:7px;text-align:center;font-size:11px;font-weight:800;cursor:pointer;background:var(--sf2);color:var(--mut);border:1.5px solid var(--br);border-radius:6px;transition:all .14s}
-.ob.act{background:rgba(59,130,246,.12);color:var(--acc);border-color:var(--acc)}
 .pvbox{background:var(--sf2);border:1px solid var(--br);border-radius:6px;padding:9px 10px;font-size:12px;min-height:50px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
 .div-info{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--ars);display:none;line-height:1.5}
-
 .btn-form-row{display:grid;grid-template-columns:1fr auto;gap:6px}
 .btn-reg{padding:11px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all .14s}
 .btn-reg:hover{background:#2563eb}
 .btn-reg.edit-mode{background:var(--orn)}
 .btn-cancel{padding:11px 14px;border-radius:8px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:12px;font-weight:700;cursor:pointer;display:none}
-
-/* SHEETS CONFIG */
-.shcfg{background:var(--sf2);border:1px solid var(--br);border-radius:7px;padding:10px}
-.shcfg-t{font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.shr{display:flex;gap:5px}
-.shr input{flex:1;font-size:11px;padding:7px 9px}
-.btn-con{padding:7px 12px;border-radius:6px;border:1px solid var(--acc);background:rgba(59,130,246,.1);color:var(--acc);font-size:11px;font-weight:800;cursor:pointer}
-.btn-con:hover{background:rgba(59,130,246,.2)}
-.sh-hint{font-size:10px;color:var(--mut);margin-top:6px;line-height:1.6}
-.sh-action-btns{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
-.btn-sh-action{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .13s}
-.btn-sh-open{border:1px solid #34a853;background:rgba(52,168,83,.08);color:#34a853}
-.btn-sh-open:hover{background:rgba(52,168,83,.18)}
-.btn-sh-fmt{border:1px solid var(--acc);background:rgba(59,130,246,.08);color:var(--acc)}
-.btn-sh-fmt:hover{background:rgba(59,130,246,.18)}
 
 /* TABLA */
 .tp{display:flex;flex-direction:column;overflow:hidden}
@@ -134,7 +116,6 @@ tbody td{padding:6px 8px;vertical-align:middle}
 .ch-gasto{background:rgba(245,158,11,.1);color:var(--orn)}
 .ch-haber{background:rgba(96,165,250,.1);color:var(--blu)}
 .ch-logistica{background:rgba(236,72,153,.1);color:#ec4899}
-.tb.al{border-color:#ec4899;background:rgba(236,72,153,.08);color:#ec4899}
 
 .n{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
 .cg{color:var(--grn)}.cr{color:var(--red)}.ca{color:var(--ars)}.cu{color:var(--usd)}.cm{color:var(--mut)}
@@ -148,11 +129,10 @@ tbody td{padding:6px 8px;vertical-align:middle}
 .btn-edit:hover{border-color:var(--orn);color:var(--orn)}
 .btn-del{padding:3px 7px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer;transition:all .13s}
 .btn-del:hover{border-color:var(--red);color:var(--red)}
-
 .empty{padding:45px 20px;text-align:center;color:var(--mut)}
 .eic{font-size:32px;margin-bottom:8px}
 
-/* ===== MODAL CIERRE ===== */
+/* MODAL CIERRE */
 .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 16px}
 .mo.show{display:flex}
 .md{background:var(--sf);border:1px solid var(--br);border-radius:14px;width:820px;max-width:100%;margin:auto}
@@ -178,104 +158,65 @@ tbody td{padding:6px 8px;vertical-align:middle}
 .ci-tbl thead th{background:var(--sf3);padding:6px 7px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--br)}
 .ci-tbl tbody tr{border-bottom:1px solid rgba(46,51,80,.25)}
 .ci-tbl tbody td{padding:5px 7px;vertical-align:middle}
-
-/* TICKET */
 .ci-ticket{padding:14px 24px;border-bottom:1px solid var(--br)}
 .ticket-preview{background:var(--sf2);border:1px solid var(--br);border-radius:8px;padding:12px 14px;font-family:monospace;font-size:11px;color:var(--txt);white-space:pre-wrap;line-height:1.6;max-height:200px;overflow-y:auto;margin-top:8px}
 .ticket-btns{display:flex;gap:8px;margin-top:10px}
 .btn-wa{padding:9px 18px;border-radius:7px;border:none;background:#25d366;color:#fff;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px}
-.btn-wa:hover{background:#1da851}
 .btn-copy{padding:9px 16px;border-radius:7px;border:1px solid var(--br);background:var(--sf2);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer}
-.btn-copy:hover{border-color:var(--acc);color:var(--acc)}
 .ci-foot{padding:12px 24px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .btn-impr{padding:8px 16px;border-radius:6px;border:1px solid var(--br);background:var(--sf2);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer}
-.btn-csv-ci{padding:8px 16px;border-radius:6px;border:1px solid var(--orn);background:rgba(245,158,11,.08);color:var(--orn);font-size:12px;font-weight:700;cursor:pointer}
 .btn-cerrar-dia{padding:8px 16px;border-radius:6px;border:none;background:var(--grn);color:#fff;font-size:12px;font-weight:800;cursor:pointer}
-.btn-cerrar-dia:hover{background:#059669}
 .btn-mc{padding:8px 16px;border-radius:6px;border:1px solid var(--br);background:var(--sf2);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer}
+
+/* LOADING */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(15,17,23,.8);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.loading-overlay.show{display:flex}
+.spinner{width:36px;height:36px;border:3px solid var(--br);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* TOAST */
 .toast{position:fixed;bottom:18px;right:18px;background:var(--sf2);border:1px solid var(--grn);border-radius:9px;padding:9px 15px;font-size:12px;font-weight:700;color:var(--grn);transform:translateY(60px);opacity:0;transition:all .27s;z-index:300}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.w{border-color:var(--orn);color:var(--orn)}
+.toast.e{border-color:var(--red);color:var(--red)}
 
-@media print{
-  header,.fp,.ta,.ticket-btns,.ci-foot,.date-nav,.readonly-bar,.sbar,.main .fp{display:none!important}
-  .mo{background:#fff;position:static;padding:0}
-  .md{border:none;width:100%}
-  body,.md,.ci-box,.ci-cat,.ci-tbl thead th,.ticket-preview{background:#fff!important;color:#111!important}
-  .cm,.ci-l,.ci-cat-l,.ci-sub,.ci-sec,.ci-box-t{color:#555!important}
-  .sa,.ca{color:#8a6700!important}.su,.cu,.cg{color:#155724!important}.cr{color:#721c24!important}
-}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--br);border-radius:3px}
-
-
-.op-indicator{display:none;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid}
-.op-indicator.show{display:flex}
-.op-laura{color:#818cf8;border-color:#818cf8;background:rgba(129,140,248,.08)}
-.op-maggie{color:var(--grn);border-color:var(--grn);background:rgba(16,185,129,.08)}
-
-/* ===== MODAL REPORTES ===== */
-.rep-head{padding:20px 24px 14px;border-bottom:1px solid var(--br)}
-.rep-tit{font-size:18px;font-weight:900;margin-bottom:3px}
-.rep-filters{padding:14px 24px;border-bottom:1px solid var(--br);display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
-.rep-fld{display:flex;flex-direction:column;gap:4px}
-.rep-fld label{font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
-.rep-fld input,.rep-fld select{background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:12px;font-family:var(--fnt)}
-.rep-fld input:focus,.rep-fld select:focus{outline:none;border-color:var(--acc)}
-.btn-rep-buscar{padding:8px 18px;border-radius:7px;border:none;background:var(--acc);color:#fff;font-size:12px;font-weight:800;cursor:pointer;align-self:flex-end}
-.btn-rep-buscar:hover{background:#2563eb}
-.rep-summary{padding:14px 24px;border-bottom:1px solid var(--br);display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.rep-sum-box{background:var(--sf2);border-radius:8px;padding:12px}
-.rep-sum-lbl{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.rep-sum-val{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
-.rep-body{padding:14px 24px;max-height:420px;overflow-y:auto}
-.rep-dia{margin-bottom:18px}
-.rep-dia-hdr{font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;padding:6px 0;border-bottom:1px solid var(--br);margin-bottom:6px;display:flex;justify-content:space-between}
-.rep-tbl{width:100%;border-collapse:collapse;font-size:11px}
-.rep-tbl th{padding:5px 7px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.3px}
-.rep-tbl td{padding:5px 7px;border-bottom:1px solid rgba(46,51,80,.2)}
-.rep-tbl tr:last-child td{border-bottom:none}
-.rep-empty{padding:40px;text-align:center;color:var(--mut)}
 </style>
 </head>
 <body>
 
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <span style="color:var(--mut);font-size:13px">Sincronizando...</span>
+</div>
 
 <header>
   <div class="logo">WORK <span>SHOP</span> · Caja</div>
   <div class="hdr-r">
-    <div style="display:flex;align-items:center;gap:5px">
-      <span style="font-size:11px;color:var(--mut)">Usuario:</span>
-      <button onclick="setUsuario('LAURA')" id="btnLaura" style="padding:4px 12px;border-radius:8px;border:1.5px solid var(--br);background:var(--sf2);color:var(--mut);font-size:12px;font-weight:800;cursor:pointer;transition:all .14s">👩 Laura</button>
-      <button onclick="setUsuario('MAGGIE')" id="btnMaggie" style="padding:4px 12px;border-radius:8px;border:1.5px solid var(--br);background:var(--sf2);color:var(--mut);font-size:12px;font-weight:800;cursor:pointer;transition:all .14s">👩‍💼 Maggie</button>
+    <div class="user-sel">
+      <span>Usuario:</span>
+      <button class="ubtn" id="btnLaura" onclick="setUsuario('LAURA')">👩 Laura</button>
+      <button class="ubtn" id="btnMaggie" onclick="setUsuario('MAGGIE')">👩‍💼 Maggie</button>
     </div>
-    <button class="btn-sm" onclick="showReportes()" style="border-color:var(--pur);color:var(--pur)">📊 Reportes</button>
-    <span id="shBadge" class="shb shb-off">📊 Sheets: desconectado</span>
-    <a id="btnSheet" class="btn-sheets" href="https://docs.google.com/spreadsheets/d/1n0imhndBjCntHD3d-qUcaKpyosUDqnOmyZL0ZBIi-_g" target="_blank">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
-      Ver en Sheets
-    </a>
+    <span id="syncBadge" class="sync-badge sync-off">⟳ Conectando...</span>
     <div class="fbadge" id="fechaHoy"></div>
     <span id="reloj" style="font-size:12px;color:var(--mut)"></span>
   </div>
 </header>
 
-<!-- NAVEGACIÓN DE FECHAS -->
 <div class="date-nav">
-  <button class="btn-nav" onclick="navDia(-1)">← Anterior</button>
   <button class="btn-nav active" id="btnHoyNav" onclick="irHoy()">Hoy</button>
-  <button class="btn-nav" onclick="navDia(1)" id="btnSig">Siguiente →</button>
+  <button class="btn-nav" onclick="navDia(-1)">← Anterior</button>
+  <button class="btn-nav" onclick="navDia(1)">Siguiente →</button>
   <input type="date" class="date-sel" id="datePicker" onchange="irFecha(this.value)">
-  <span class="fecha-nav-label" id="fechaNavLabel"></span>
+  <span style="font-size:12px;font-weight:700;color:var(--txt)" id="fechaNavLabel"></span>
   <span class="hist-badge" id="histBadge" style="display:none">📅 Historial</span>
-  <span class="dias-guardados" id="diasGuardados"></span>
 </div>
 
-<!-- BARRA MODO SOLO LECTURA -->
 <div class="readonly-bar" id="readonlyBar">
-  📅 Estás viendo el historial del <strong id="roFecha"></strong> — Solo lectura
+  📅 Historial del <strong id="roFecha"></strong> — Solo lectura
   <button class="btn-hoy" onclick="irHoy()">Volver a hoy →</button>
 </div>
 
@@ -307,8 +248,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
   <div class="sc"><span class="sl">Movimientos</span><span class="svs cm" id="cMov">0</span></div>
 </div>
 
-<div class="main" style="height:calc(100vh - 148px)">
-  <!-- FORM -->
+<div class="main">
   <div class="fp" id="formPanel">
     <div class="pt">
       <span id="formTitle">Nuevo movimiento</span>
@@ -327,7 +267,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
       </div>
     </div>
     <div class="div-info" id="divInfo">💱 <strong>Compra de divisas:</strong> ingresá los USD que comprás. Los ARS salen de caja según cotización.</div>
-    <div class="fld"><label>Descripción / Nombre</label><input type="text" id="desc" placeholder="Ej: Walter, Turco, Pago Urquiza..."></div>
+    <div class="fld"><label>Descripción</label><input type="text" id="desc" placeholder="Ej: Walter, Turco, Pago Urquiza..."></div>
     <div class="fld" id="fldMoneda">
       <label>Moneda</label>
       <div class="tog2">
@@ -347,13 +287,6 @@ tbody td{padding:6px 8px;vertical-align:middle}
         <button class="t2b" id="bEgr" onclick="setDir('EGR')" style="color:var(--mut)">▼ Egreso</button>
       </div>
     </div>
-    <div class="fld">
-      <label>Operadora</label>
-      <div class="op-tog">
-        <button class="ob act" onclick="setOp('LAURA',this)">Laura</button>
-        <button class="ob" onclick="setOp('MAGGIE',this)">Maggie</button>
-      </div>
-    </div>
     <div class="r2">
       <div class="fld"><label>Hora</label><input type="time" id="horaI"></div>
       <div class="fld"><label>Notas</label><input type="text" id="notas" placeholder="Observaciones..."></div>
@@ -362,29 +295,8 @@ tbody td{padding:6px 8px;vertical-align:middle}
       <button class="btn-reg" id="btnReg" onclick="registrar()">+ Registrar movimiento</button>
       <button class="btn-cancel" id="btnCancel" onclick="cancelEdit()">✕</button>
     </div>
-
-    <!-- SHEETS CONFIG -->
-    <div class="shcfg">
-      <div class="shcfg-t">📊 Google Sheets — Sync por mes</div>
-      <div class="shr">
-        <input type="text" id="asUrl" placeholder="URL de Apps Script Web App..." value="https://script.google.com/macros/s/AKfycbzYj5fuhVRHc1NhloV6cDxQDZLU0oYbCLwuUVfOamCinN-lv6u_FkHWwnI1hIpWCmS7ug/exec">
-        <button class="btn-con" onclick="conectar()">Conectar</button>
-      </div>
-      <div class="sh-hint">
-        Hoja del mes: <strong id="mesActual" style="color:var(--acc)"></strong><br>
-        Cada mes queda en su propia hoja del spreadsheet.
-      </div>
-      <div class="sh-action-btns">
-        <a href="https://docs.google.com/spreadsheets/d/1n0imhndBjCntHD3d-qUcaKpyosUDqnOmyZL0ZBIi-_g" target="_blank" class="btn-sh-action btn-sh-open">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
-          Abrir Spreadsheet
-        </a>
-        <button class="btn-sh-action btn-sh-fmt" onclick="reformatearSheets()">🎨 Aplicar tema oscuro</button>
-      </div>
-    </div>
   </div>
 
-  <!-- TABLA -->
   <div class="tp">
     <div class="th">
       <div>
@@ -393,7 +305,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
       </div>
       <div class="ta">
         <button class="btn-sm" onclick="exportCSV()">⬇ CSV</button>
-        <button class="btn-sm btn-ci" onclick="showCierre()">📋 Cierre de Caja</button>
+        <button class="btn-sm btn-ci" onclick="showCierre()">📋 Cierre</button>
       </div>
     </div>
     <div class="tw">
@@ -403,7 +315,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
           <th>Cotiz.</th><th>Monto</th>
           <th>Ing. ARS</th><th>Egr. ARS</th><th>Saldo ARS</th>
           <th>Ing. USD</th><th>Egr. USD</th><th>Saldo USD</th>
-          <th>Notas</th><th style="min-width:130px">Acciones</th>
+          <th>Notas</th><th>Acciones</th>
         </tr></thead>
         <tbody id="tbody"><tr><td colspan="15"><div class="empty"><div class="eic">📋</div>Registrá el primer movimiento</div></td></tr></tbody>
       </table>
@@ -415,7 +327,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
 <div class="mo" id="moCierre">
   <div class="md">
     <div class="ci-head">
-      <div class="ci-tit">📋 Cierre de Caja — <span id="cFecha" style="color:var(--acc)"></span></div>
+      <div class="ci-tit">📋 Cierre — <span id="cFecha" style="color:var(--acc)"></span></div>
       <div class="ci-sub" id="cSub"></div>
     </div>
     <div class="ci-saldos">
@@ -434,29 +346,25 @@ tbody td{padding:6px 8px;vertical-align:middle}
         <div class="ci-row ci-final"><span class="ci-l" style="color:var(--txt);font-weight:700">Saldo final</span><span class="ci-v su" style="font-size:16px" id="c_sfU">u$0,00</span></div>
       </div>
     </div>
-    <div class="ci-cats"><div class="ci-sec">Resumen por categoría</div><div class="ci-cats-grid" id="ciCats"></div></div>
+    <div class="ci-cats"><div class="ci-sec">Por categoría</div><div class="ci-cats-grid" id="ciCats"></div></div>
     <div class="ci-movs">
       <div class="ci-sec">Detalle completo</div>
       <table class="ci-tbl">
-        <thead><tr><th>#</th><th>Hora</th><th>Op.</th><th>Tipo</th><th>Descripción</th><th>Cotiz.</th><th>Monto</th><th>Ing.ARS</th><th>Egr.ARS</th><th>Saldo ARS</th><th>Ing.USD</th><th>Egr.USD</th><th>Saldo USD</th><th>Notas</th><th>✓</th></tr></thead>
+        <thead><tr><th>#</th><th>Hora</th><th>Op.</th><th>Tipo</th><th>Descripción</th><th>Monto</th><th>Ing.ARS</th><th>Egr.ARS</th><th>Saldo ARS</th><th>Ing.USD</th><th>Egr.USD</th><th>Saldo USD</th><th>✓</th></tr></thead>
         <tbody id="ciTbody"></tbody>
       </table>
     </div>
     <div class="ci-ticket">
-      <div class="ci-sec">📱 Ticket para compartir</div>
+      <div class="ci-sec">📱 Ticket WhatsApp</div>
       <div class="ticket-preview" id="ticketPreview"></div>
       <div class="ticket-btns">
-        <button class="btn-wa" onclick="compartirWA()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-          Compartir WhatsApp
-        </button>
+        <button class="btn-wa" onclick="compartirWA()">📲 WhatsApp</button>
         <button class="btn-copy" onclick="copiarTicket()">📋 Copiar</button>
       </div>
     </div>
     <div class="ci-foot">
       <button class="btn-impr" onclick="window.print()">🖨 Imprimir</button>
-      <button class="btn-csv-ci" onclick="exportCSV()">⬇ CSV</button>
-      <button class="btn-cerrar-dia" id="btnCerrarDia" onclick="cerrarDia()">✓ Cerrar día y pasar saldo</button>
+      <button class="btn-cerrar-dia" id="btnCerrarDia" onclick="cerrarDia()">✓ Cerrar día</button>
       <button class="btn-mc" onclick="closeCierre()">Cerrar</button>
     </div>
   </div>
@@ -465,142 +373,212 @@ tbody td{padding:6px 8px;vertical-align:middle}
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================================
-// PERSISTENCIA COMPLETA EN localStorage
-// Clave por fecha: ws_dia_DD-MM-YYYY
-// Estructura: { saldoIniARS, saldoIniUSD, movimientos:[] }
-// ============================================================
+// ===== SUPABASE CONFIG =====
+const SUPABASE_URL = 'https://fabtiutuhftxxjkmlbyh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhYnRpdXR1aGZ0eHhqa21sYnloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjIxODYsImV4cCI6MjA5ODkzODE4Nn0.a18cu5Vm_X_wkZn2nnopu6etcmwNuCJ7XokINdTniAA';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1n0imhndBjCntHD3d-qUcaKpyosUDqnOmyZL0ZBIi-_g';
-
-// Estado global
-let movs=[], tipo=null, moneda='ARS', dir=null, op='';
+// ===== ESTADO =====
+let movs=[], tipo=null, moneda='ARS', dir=null;
+let op = localStorage.getItem('ws_op') || 'LAURA';
 let saldoIniARS=0, saldoIniUSD=0, sARS=0, sUSD=0;
-let asUrl='', shOk=false, editIdx=null;
-let fechaActual=null; // Date object de la fecha que se está viendo
-let modoHistorial=false;
-let ticketTexto='';
+let fechaActual=null, modoHistorial=false, editIdx=null;
+let ticketTexto='', realtimeSub=null;
 
-// ===== CLAVE DE STORAGE =====
-function claveLS(d){ return 'ws_dia_'+fmtKey(d); }
-function fmtKey(d){ return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; }
-function getMes(d){
-  const n = d || fechaActual || new Date();
-  const meses=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
-               'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  return meses[n.getMonth()] + ' ' + n.getFullYear();
-}
-function esHoy(d){ const h=new Date(); return d.toDateString()===h.toDateString(); }
-
-// ===== GUARDAR DÍA EN localStorage =====
-function guardarDia(){
-  if(modoHistorial) return; // no sobreescribir historial
-  const data={ saldoIniARS, saldoIniUSD, movimientos:movs, guardadoEn:new Date().toISOString() };
-  localStorage.setItem(claveLS(fechaActual), JSON.stringify(data));
-  actualizarDiasGuardados();
+// ===== SUPABASE FUNCTIONS =====
+async function cargarMovimientosDB(fecha){
+  const {data,error} = await sb.from('movimientos')
+    .select('*')
+    .eq('fecha', fecha)
+    .order('id', {ascending:true});
+  if(error){ console.error('Error cargando:', error); return []; }
+  return data||[];
 }
 
-// ===== CARGAR DÍA DESDE localStorage =====
-// Variable para polling
-let pollingInterval = null;
-
-function cargarDia(d){
-  fechaActual=d;
-  modoHistorial=!esHoy(d);
-
-  // ── SIEMPRE: primero cargar local para mostrar datos inmediatamente ──
-  const raw=localStorage.getItem(claveLS(d));
-  if(raw){
-    try{
-      const data=JSON.parse(raw);
-      saldoIniARS=data.saldoIniARS||0;
-      saldoIniUSD=data.saldoIniUSD||0;
-      movs=data.movimientos||[];
-    }catch(e){ saldoIniARS=0; saldoIniUSD=0; movs=[]; }
-  } else {
-    if(esHoy(d)){
-      const ayer=new Date(d); ayer.setDate(ayer.getDate()-1);
-      const rawAyer=localStorage.getItem(claveLS(ayer));
-      if(rawAyer){
-        try{
-          const dataAyer=JSON.parse(rawAyer);
-          const movAyer=dataAyer.movimientos||[];
-          saldoIniARS = movAyer.length>0 ? movAyer[movAyer.length-1].sARS : (dataAyer.saldoIniARS||0);
-          saldoIniUSD = movAyer.length>0 ? movAyer[movAyer.length-1].sUSD : (dataAyer.saldoIniUSD||0);
-        }catch(e){ saldoIniARS=0; saldoIniUSD=0; }
-      } else { saldoIniARS=0; saldoIniUSD=0; }
-    } else { saldoIniARS=0; saldoIniUSD=0; }
-    movs=[];
-  }
-  sARS=saldoIniARS; sUSD=saldoIniUSD;
-  movs.forEach(m=>{ sARS+=m.iA-m.eA; sUSD+=m.iU-m.eU; m.sARS=sARS; m.sUSD=sUSD; });
-
-  // Actualizar UI via función compartida
-  finalizarCargaDia(d);
-  // Sincronizar con Sheets en segundo plano si está conectado
-  if(shOk) sincronizarEnSegundoPlano(d);
+async function insertarMovDB(mov){
+  const {error} = await sb.from('movimientos').upsert({
+    id: mov.id,
+    fecha: mov.fecha,
+    hora: mov.hora,
+    tipo: mov.tipo,
+    descripcion: mov.desc,
+    cotiz: mov.cotiz,
+    monto: mov.monto,
+    moneda: mov.moneda,
+    ing_ars: mov.iA,
+    egr_ars: mov.eA,
+    saldo_ars: mov.sARS,
+    ing_usd: mov.iU,
+    egr_usd: mov.eU,
+    saldo_usd: mov.sUSD,
+    operadora: mov.op,
+    notas: mov.notas,
+    verificado: mov.ok
+  });
+  if(error) console.error('Error insertando:', error);
+  return !error;
 }
 
-async function sincronizarEnSegundoPlano(d){
-  const hoja=getMes(d);
-  const fechaStr=d.toLocaleDateString('es-AR');
-  try{
-    const params=new URLSearchParams({action:'getMovimientos',sheet:hoja,fecha:fechaStr});
-    const r=await fetch(asUrl+'?'+params.toString());
-    const data=await r.json();
-    if(data.ok && data.movimientos && data.movimientos.length>=movs.length){
-      movs=data.movimientos;
-      if(data.saldoIniARS!==undefined){ saldoIniARS=data.saldoIniARS; saldoIniUSD=data.saldoIniUSD; }
-      sARS=saldoIniARS; sUSD=saldoIniUSD;
-      movs.forEach(m=>{ sARS+=m.iA-m.eA; sUSD+=m.iU-m.eU; m.sARS=sARS; m.sUSD=sUSD; });
-      guardarDia(); render(); updSaldos();
-    }
-  }catch(e){ console.warn('Sync BG error:',e); }
+async function eliminarMovDB(id){
+  const {error} = await sb.from('movimientos').delete().eq('id', id);
+  if(error) console.error('Error eliminando:', error);
 }
 
-// ===== CARGA DESDE SHEETS (fuente central) =====
-async function cargarDesdeSheets(d){
-  const hoja = getMes(d);
-  const fechaStr = d.toLocaleDateString('es-AR');
-  try {
-    document.getElementById('shBadge').textContent = '🔄 Cargando...';
-    const r = await fetch(asUrl, {
-      method:'POST',
-      body: JSON.stringify({action:'getMovimientos', sheet:hoja, fecha:fechaStr}),
-      headers:{'Content-Type':'text/plain;charset=utf-8'}
+async function actualizarVerifDB(id, ok){
+  const {error} = await sb.from('movimientos').update({verificado:ok}).eq('id', id);
+  if(error) console.error('Error verificando:', error);
+}
+
+// ===== REALTIME SUBSCRIPTION =====
+function suscribirRealtime(fecha){
+  // Desuscribir anterior
+  if(realtimeSub){ sb.removeChannel(realtimeSub); realtimeSub=null; }
+  
+  realtimeSub = sb.channel('movimientos-'+fecha)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'movimientos',
+      filter: `fecha=eq.${fecha}`
+    }, (payload) => {
+      // Recargar datos cuando hay cambios
+      recargarDesdeBD(fecha);
+    })
+    .subscribe((status) => {
+      if(status === 'SUBSCRIBED'){
+        document.getElementById('syncBadge').className='sync-badge sync-ok';
+        document.getElementById('syncBadge').textContent='● En vivo';
+      } else {
+        document.getElementById('syncBadge').className='sync-badge sync-off';
+        document.getElementById('syncBadge').textContent='⟳ Reconectando...';
+      }
     });
-    const data = await r.json();
-    if(data.ok){
-      movs = data.movimientos || [];
-      saldoIniARS = data.saldoIniARS || 0;
-      saldoIniUSD = data.saldoIniUSD || 0;
-      // También guardar en localStorage como caché
-      guardarDia();
-    } else {
-      // Sin datos en Sheets, arrancar desde cero o heredar
-      movs = [];
-      saldoIniARS = data.saldoIniARS || 0;
-      saldoIniUSD = data.saldoIniUSD || 0;
-    }
-    document.getElementById('shBadge').className='shb shb-ok';
-    document.getElementById('shBadge').textContent='📊 Sheets: conectado';
-  } catch(e) {
-    // Fallback a localStorage si Sheets falla
-    const raw = localStorage.getItem(claveLS(d));
-    if(raw){ try{ const dt=JSON.parse(raw); saldoIniARS=dt.saldoIniARS||0; saldoIniUSD=dt.saldoIniUSD||0; movs=dt.movimientos||[]; }catch(ex){movs=[];} }
-    else { movs=[]; saldoIniARS=0; saldoIniUSD=0; }
-    document.getElementById('shBadge').textContent='📊 Sheets: conectado';
-  }
-  sARS=saldoIniARS; sUSD=saldoIniUSD;
-  movs.forEach(m=>{ sARS+=m.iA-m.eA; sUSD+=m.iU-m.eU; m.sARS=sARS; m.sUSD=sUSD; });
-  finalizarCargaDia(d);
 }
 
-function finalizarCargaDia(d){
+async function recargarDesdeBD(fecha){
+  const datos = await cargarMovimientosDB(fecha);
+  movs = datos.map(d => ({
+    id: d.id,
+    fecha: d.fecha,
+    hora: d.hora,
+    tipo: d.tipo,
+    desc: d.descripcion,
+    cotiz: d.cotiz,
+    monto: d.monto,
+    moneda: d.moneda,
+    iA: parseFloat(d.ing_ars)||0,
+    eA: parseFloat(d.egr_ars)||0,
+    sARS: parseFloat(d.saldo_ars)||0,
+    iU: parseFloat(d.ing_usd)||0,
+    eU: parseFloat(d.egr_usd)||0,
+    sUSD: parseFloat(d.saldo_usd)||0,
+    op: d.operadora,
+    notas: d.notas||'',
+    ok: d.verificado||false
+  }));
+  
+  // Recalcular saldos finales
+  if(movs.length > 0){
+    sARS = movs[movs.length-1].sARS;
+    sUSD = movs[movs.length-1].sUSD;
+  } else {
+    sARS = saldoIniARS;
+    sUSD = saldoIniUSD;
+  }
+  
+  render();
+  updSaldos();
+}
+
+// ===== HELPERS DE FECHA =====
+function fmtFecha(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function esHoy(d){ return fmtFecha(d)===fmtFecha(new Date()); }
+
+// ===== CLOCK =====
+function tick(){ document.getElementById('reloj').textContent=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+setInterval(tick,1000); tick();
+
+// ===== INIT =====
+async function initUI(){
+  const n=new Date();
+  const d=n.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('fechaHoy').textContent=d[0].toUpperCase()+d.slice(1);
+  document.getElementById('horaI').value=n.toTimeString().slice(0,5);
+  document.getElementById('cFecha').textContent=n.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+  
+  // Init usuario
+  setUsuario(op, false);
+  
+  // Cargar saldo inicial de localStorage
+  const keyARS='ws_siARS_'+fmtFecha(n);
+  const keyUSD='ws_siUSD_'+fmtFecha(n);
+  saldoIniARS=parseFloat(localStorage.getItem(keyARS)||'0');
+  saldoIniUSD=parseFloat(localStorage.getItem(keyUSD)||'0');
+  document.getElementById('siARS').value=saldoIniARS;
+  document.getElementById('siUSD').value=saldoIniUSD;
+  
+  // Cargar día de hoy
+  await cargarDia(new Date());
+}
+
+initUI();
+
+// ===== USUARIO =====
+function setUsuario(u, showToast=true){
+  op = u;
+  localStorage.setItem('ws_op', u);
+  const bL=document.getElementById('btnLaura');
+  const bM=document.getElementById('btnMaggie');
+  if(u==='LAURA'){
+    bL.className='ubtn laura-act';
+    bM.className='ubtn';
+  } else {
+    bM.className='ubtn maggie-act';
+    bL.className='ubtn';
+  }
+  // Actualizar botones del form
+  document.querySelectorAll('.ob').forEach(b=>{
+    b.classList.toggle('act', b.getAttribute('onclick')?.includes("'"+u+"'"));
+  });
+  if(showToast) toast('Usuario: '+(u==='LAURA'?'Laura':'Maggie'));
+}
+
+// ===== CARGA DE DÍA =====
+async function cargarDia(d){
+  fechaActual = d;
+  modoHistorial = !esHoy(d);
+  
+  const fechaStr = fmtFecha(d);
+  
+  // Mostrar loading
+  document.getElementById('loadingOverlay').classList.add('show');
+  
+  try {
+    // Suscribir a cambios en tiempo real solo si es hoy
+    if(!modoHistorial){
+      suscribirRealtime(fechaStr);
+    } else {
+      if(realtimeSub){ sb.removeChannel(realtimeSub); realtimeSub=null; }
+    }
+    
+    // Cargar datos
+    await recargarDesdeBD(fechaStr);
+    
+  } finally {
+    document.getElementById('loadingOverlay').classList.remove('show');
+  }
+  
+  // Saldo inicial
+  const keyARS='ws_siARS_'+fechaStr;
+  const keyUSD='ws_siUSD_'+fechaStr;
+  saldoIniARS=parseFloat(localStorage.getItem(keyARS)||'0');
+  saldoIniUSD=parseFloat(localStorage.getItem(keyUSD)||'0');
   document.getElementById('siARS').value=saldoIniARS;
   document.getElementById('siUSD').value=saldoIniUSD;
   document.getElementById('siARS').disabled=modoHistorial;
   document.getElementById('siUSD').disabled=modoHistorial;
+  
+  // UI
   const fp=document.getElementById('formPanel');
   fp.classList.toggle('disabled', modoHistorial);
   document.getElementById('readonlyBar').classList.toggle('show', modoHistorial);
@@ -611,16 +589,24 @@ function finalizarCargaDia(d){
   document.getElementById('btnHoyNav').classList.toggle('active',esHoy(d));
   document.getElementById('tblTitle').textContent=modoHistorial?'Historial '+d.toLocaleDateString('es-AR',{day:'numeric',month:'long'}):'Movimientos del día';
   document.getElementById('btnCerrarDia').style.display=modoHistorial?'none':'block';
-  document.getElementById('datePicker').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  updSaldos(); render();
-  // Auto-refresh cada 30 seg cuando Sheets está conectado
-  if(pollingInterval) clearInterval(pollingInterval);
-  if(shOk && esHoy(d)){
-    pollingInterval = setInterval(()=>{ if(shOk) cargarDesdeSheets(fechaActual); }, 30000);
-  }
+  document.getElementById('datePicker').value=fechaStr;
 }
 
-// ===== NAVEGACIÓN DE FECHAS =====
+// ===== SALDO INICIAL =====
+function setSaldoIni(){
+  if(modoHistorial) return;
+  saldoIniARS=parseFloat(document.getElementById('siARS').value)||0;
+  saldoIniUSD=parseFloat(document.getElementById('siUSD').value)||0;
+  localStorage.setItem('ws_siARS_'+fmtFecha(fechaActual), saldoIniARS);
+  localStorage.setItem('ws_siUSD_'+fmtFecha(fechaActual), saldoIniUSD);
+  // Recalcular saldos
+  sARS=saldoIniARS; sUSD=saldoIniUSD;
+  movs.forEach(m=>{ sARS+=m.iA-m.eA; sUSD+=m.iU-m.eU; m.sARS=sARS; m.sUSD=sUSD; });
+  render(); updSaldos();
+  toast('✓ Saldo inicial actualizado');
+}
+
+// ===== NAVEGACIÓN =====
 function navDia(delta){
   const nueva=new Date(fechaActual);
   nueva.setDate(nueva.getDate()+delta);
@@ -636,45 +622,7 @@ function irFecha(val){
   cargarDia(nueva);
 }
 
-function actualizarDiasGuardados(){
-  const keys=Object.keys(localStorage).filter(k=>k.startsWith('ws_dia_'));
-  document.getElementById('diasGuardados').textContent=keys.length>0?`${keys.length} día${keys.length!==1?'s':''} en historial`:'';
-}
-
-// ===== CLOCK =====
-function tick(){ document.getElementById('reloj').textContent=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
-setInterval(tick,1000); tick();
-
-// ===== INIT =====
-function initUI(){
-  const n=new Date();
-  const d=n.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('fechaHoy').textContent=d[0].toUpperCase()+d.slice(1);
-  document.getElementById('horaI').value=n.toTimeString().slice(0,5);
-  document.getElementById('cFecha').textContent=n.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('mesActual').textContent=getMes(new Date());
-  actualizarDiasGuardados();
-  cargarDia(new Date());
-}
-initUI();
-
-// ===== SALDO INICIAL =====
-function setSaldoIni(){
-  if(modoHistorial) return;
-  saldoIniARS=parseFloat(document.getElementById('siARS').value)||0;
-  saldoIniUSD=parseFloat(document.getElementById('siUSD').value)||0;
-  recalcAll();
-  guardarDia();
-  toast('✓ Saldo inicial actualizado');
-}
-
-function recalcAll(){
-  sARS=saldoIniARS; sUSD=saldoIniUSD;
-  movs.forEach(m=>{ sARS+=m.iA-m.eA; sUSD+=m.iU-m.eU; m.sARS=sARS; m.sUSD=sUSD; });
-  render(); updSaldos();
-}
-
-// ===== TIPO/MONEDA/DIR/OP (igual que v4) =====
+// ===== TIPO/MONEDA/DIR =====
 function setTipo(t,btn){
   tipo=t;
   document.querySelectorAll('.tb').forEach(b=>b.className='tb');
@@ -700,7 +648,6 @@ function updDirUI(){
   i.style.color=dir==='ING'?'var(--grn)':'var(--mut)'; i.style.background=dir==='ING'?'rgba(16,185,129,.12)':''; i.style.fontWeight=dir==='ING'?'900':'';
   e.style.color=dir==='EGR'?'var(--red)':'var(--mut)'; e.style.background=dir==='EGR'?'rgba(239,68,68,.1)':''; e.style.fontWeight=dir==='EGR'?'900':'';
 }
-function setOp(o,btn){ op=o; document.querySelectorAll('.ob').forEach(b=>b.classList.remove('act')); btn.classList.add('act'); }
 
 // ===== PREVIEW =====
 function calcPv(){
@@ -709,7 +656,7 @@ function calcPv(){
   const pv=document.getElementById('pv');
   if(!m){pv.innerHTML='<span style="color:var(--mut);font-size:11px">Seleccioná tipo y monto para ver el impacto</span>';return;}
   if(tipo==='DIVISA'){
-    pv.innerHTML=`<div style="display:flex;flex-direction:column;gap:3px;width:100%"><div style="font-size:10px;color:var(--mut)">Impacto en caja:</div><div><span class="n cu">▲ USD +u$${f2(m)}</span></div><div><span class="n cr">▼ ARS -$${f0(m*c)}</span> <span style="color:var(--mut);font-size:10px">@ $${c}</span></div></div>`;
+    pv.innerHTML=`<div style="display:flex;flex-direction:column;gap:3px;width:100%"><div style="font-size:10px;color:var(--mut)">Impacto:</div><div><span class="n cu">▲ USD +u$${f2(m)}</span></div><div><span class="n cr">▼ ARS -$${f0(m*c)}</span> <span style="color:var(--mut);font-size:10px">@ $${c}</span></div></div>`;
   } else if(moneda==='ARS'){
     const col=dir==='ING'?'var(--grn)':'var(--red)';
     pv.innerHTML=`<span style="color:${col};font-weight:800;font-size:13px">${dir==='ING'?'▲':'▼'} ARS ${dir==='ING'?'+':'-'}$${f0(m)}</span><span style="color:var(--mut);font-size:10px;margin-left:5px">Solo caja ARS</span>`;
@@ -720,7 +667,7 @@ function calcPv(){
 }
 
 // ===== REGISTRAR =====
-function registrar(){
+async function registrar(){
   if(modoHistorial) return;
   const desc=document.getElementById('desc').value.trim();
   const monto=parseFloat(document.getElementById('monto').value);
@@ -738,22 +685,37 @@ function registrar(){
   else { if(dir==='ING') iU=monto; else eU=monto; }
 
   if(editIdx!==null){
+    // EDITAR
     const m=movs[editIdx];
-    Object.assign(m,{tipo,desc,cotiz,monto,moneda,dir:tipo==='DIVISA'?'DIVISA':dir,iA,eA,iU,eU,hora:horaV||'--:--',notas,op});
-    recalcAll();
-    if(shOk) syncFila(m);
-    toast('✓ Movimiento #'+m.id+' actualizado');
+    m.tipo=tipo; m.desc=desc; m.cotiz=cotiz; m.monto=monto;
+    m.moneda=moneda; m.dir=tipo==='DIVISA'?'DIVISA':dir;
+    m.iA=iA; m.eA=eA; m.iU=iU; m.eU=eU;
+    m.hora=horaV||'--:--'; m.notas=notas; m.op=op;
+    // Recalcular saldos desde el inicio
+    let tA=saldoIniARS, tU=saldoIniUSD;
+    movs.forEach(mv=>{ tA+=mv.iA-mv.eA; tU+=mv.iU-mv.eU; mv.sARS=tA; mv.sUSD=tU; });
+    sARS=tA; sUSD=tU;
+    await insertarMovDB(m);
+    toast('✓ Movimiento actualizado');
     cancelEdit();
   } else {
+    // NUEVO
     sARS+=iA-eA; sUSD+=iU-eU;
-    const mov={id:Date.now(),fecha:fechaActual.toLocaleDateString('es-AR'),hora:horaV||'--:--',tipo,desc,cotiz,monto,moneda,dir:tipo==='DIVISA'?'DIVISA':dir,iA,eA,iU,eU,sARS,sUSD,op,notas,ok:false};
+    const mov={
+      id: Date.now(),
+      fecha: fmtFecha(fechaActual),
+      hora: horaV||'--:--',
+      tipo, desc, cotiz, monto, moneda,
+      dir: tipo==='DIVISA'?'DIVISA':dir,
+      iA,eA,iU,eU, sARS, sUSD, op, notas, ok:false
+    };
     movs.push(mov);
-    render(); updSaldos();
-    if(shOk) syncFila(mov);
+    const ok = await insertarMovDB(mov);
+    if(ok) toast('✓ Registrado · sincronizando...');
+    else toast('Registrado localmente (error de conexión)', 1);
     limpiar();
-    toast('✓ Registrado'+(shOk?' · Sheets':'')); 
   }
-  guardarDia();
+  render(); updSaldos();
 }
 
 // ===== EDITAR =====
@@ -768,18 +730,17 @@ function editarMov(i){
   document.getElementById('notas').value=m.notas;
   document.querySelectorAll('.tb').forEach(b=>b.className='tb');
   const cls={COBRO:'ac',PAGO:'ap',DIVISA:'ad',RETIRO:'ar',GASTO:'ag',HABER:'ah',LOGISTICA:'al'};
-  document.querySelectorAll('.tb').forEach(b=>{ if(b.getAttribute('onclick').includes("'"+m.tipo+"'")) b.classList.add(cls[m.tipo]); });
-  document.querySelectorAll('.ob').forEach(b=>{ b.classList.toggle('act',b.getAttribute('onclick').includes("'"+m.op+"'")); });
+  document.querySelectorAll('.tb').forEach(b=>{ if(b.getAttribute('onclick')?.includes("'"+m.tipo+"'")) b.classList.add(cls[m.tipo]); });
   const isDivisa=m.tipo==='DIVISA';
   document.getElementById('divInfo').style.display=isDivisa?'block':'none';
   document.getElementById('fldMoneda').style.opacity=isDivisa?'.4':'1';
   document.getElementById('fldDir').style.opacity=isDivisa?'.4':'1';
   document.getElementById('mLbl').textContent=isDivisa?'Monto USD a comprar':m.moneda==='ARS'?'Monto ARS':'Monto USD';
   updMonedaUI(); updDirUI(); calcPv();
-  document.getElementById('formTitle').textContent='Editando movimiento';
+  document.getElementById('formTitle').textContent='Editando';
   document.getElementById('editBadge').style.display='inline';
-  document.getElementById('editNum').textContent=m.id;
-  document.getElementById('btnReg').textContent='✓ Guardar cambios';
+  document.getElementById('editNum').textContent=i+1;
+  document.getElementById('btnReg').textContent='✓ Guardar';
   document.getElementById('btnReg').classList.add('edit-mode');
   document.getElementById('btnCancel').style.display='block';
   document.querySelector('.fp').scrollTo({top:0,behavior:'smooth'});
@@ -802,34 +763,33 @@ function cancelEdit(){
 }
 
 // ===== VERIFICAR / ELIMINAR =====
-function verificarMov(i){
+async function verificarMov(i){
   if(modoHistorial) return;
-  movs[i].ok=!movs[i].ok; render(); guardarDia();
-  if(shOk) updVerif(i);
-  toast(movs[i].ok?'✓ Verificado':'Verificación removida');
-}
-function eliminarMov(i){
-  if(modoHistorial) return;
-  if(!confirm(`¿Eliminar movimiento #${movs[i].id} — ${movs[i].desc}?`)) return;
-  if(editIdx===i) cancelEdit();
-  const movIdAEliminar = movs[i].id;
-  movs.splice(i,1); recalcAll(); guardarDia();
-  if(shOk) eliminarDeSheets(movIdAEliminar);
-  toast('Movimiento eliminado');
+  movs[i].ok=!movs[i].ok;
+  render();
+  await actualizarVerifDB(movs[i].id, movs[i].ok);
+  toast(movs[i].ok?'✓ Verificado':'Pendiente');
 }
 
-async function eliminarDeSheets(id){
-  try{
-    const params = new URLSearchParams({action:'deleteRow',sheet:getMes(fechaActual||new Date()),id:id});
-    await fetch(asUrl+'?'+params.toString());
-  }catch(e){ console.warn('Error eliminando:',e); }
+async function eliminarMov(i){
+  if(modoHistorial) return;
+  if(!confirm(`¿Eliminar: ${movs[i].desc}?`)) return;
+  if(editIdx===i) cancelEdit();
+  const id=movs[i].id;
+  movs.splice(i,1);
+  let tA=saldoIniARS, tU=saldoIniUSD;
+  movs.forEach((m,j)=>{ tA+=m.iA-m.eA; tU+=m.iU-m.eU; m.sARS=tA; m.sUSD=tU; });
+  sARS=tA; sUSD=tU;
+  render(); updSaldos();
+  await eliminarMovDB(id);
+  toast('Eliminado');
 }
 
 // ===== RENDER =====
 function render(){
   const tb=document.getElementById('tbody');
   if(!movs.length){
-    tb.innerHTML=`<tr><td colspan="15"><div class="empty"><div class="eic">${modoHistorial?'📅':'📋'}</div>${modoHistorial?'Sin movimientos registrados este día':'Registrá el primer movimiento del día'}</div></td></tr>`;
+    tb.innerHTML=`<tr><td colspan="15"><div class="empty"><div class="eic">${modoHistorial?'📅':'📋'}</div>${modoHistorial?'Sin movimientos este día':'Registrá el primer movimiento'}</div></td></tr>`;
     document.getElementById('movSub').textContent='Sin movimientos';
     document.getElementById('cMov').textContent='0'; return;
   }
@@ -843,21 +803,23 @@ function render(){
     const sA=`<span class="n ${m.sARS>=0?'sa':'cr'}">$${f0(m.sARS)}</span>`;
     const sU=`<span class="n ${m.sUSD>=0?'su':'cr'}">u$${f2(m.sUSD)}</span>`;
     const acciones=modoHistorial
-      ?`<div class="row-actions"><span style="font-size:10px;color:${m.ok?'var(--grn)':'var(--orn)'}">${m.ok?'✓ Verificado':'○ Pendiente'}</span></div>`
+      ?`<span style="font-size:10px;color:${m.ok?'var(--grn)':'var(--orn)'}">${m.ok?'✓ Verificado':'○ Pendiente'}</span>`
       :`<div class="row-actions">
           <button class="btn-verif ${m.ok?'ok':''}" onclick="verificarMov(${i})">${m.ok?'✓ OK':'○ Chequear'}</button>
           <button class="btn-edit" onclick="editarMov(${i})">✏️</button>
           <button class="btn-del" onclick="eliminarMov(${i})">🗑</button>
         </div>`;
     return `<tr class="${m.ok?'verified':''}">
-      <td class="cm">${m.id}</td><td class="cm">${m.hora}</td>
+      <td class="cm" style="font-size:9px">${i+1}</td>
+      <td class="cm">${m.hora}</td>
       <td style="font-size:10px;color:var(--mut)">${m.op}</td>
       <td>${chip}</td>
       <td><strong>${m.desc}</strong>${m.notas?`<br><span style="font-size:10px;color:var(--mut)">${m.notas}</span>`:''}</td>
-      <td class="cm">$${m.cotiz}</td><td>${mOrig}</td>
+      <td class="cm">$${m.cotiz}</td>
+      <td>${mOrig}</td>
       <td>${iA}</td><td>${eA}</td><td>${sA}</td>
       <td>${iU}</td><td>${eU}</td><td>${sU}</td>
-      <td style="max-width:0;overflow:hidden"></td>
+      <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
       <td>${acciones}</td>
     </tr>`;
   }).join('');
@@ -880,7 +842,7 @@ function updSaldos(){
 function showCierre(){
   const tIA=movs.reduce((s,m)=>s+m.iA,0),tEA=movs.reduce((s,m)=>s+m.eA,0);
   const tIU=movs.reduce((s,m)=>s+m.iU,0),tEU=movs.reduce((s,m)=>s+m.eU,0);
-  const verif=movs.filter(m=>m.ok).length, now=new Date();
+  const verif=movs.filter(m=>m.ok).length;
   document.getElementById('c_siA').textContent='$'+f0(saldoIniARS);
   document.getElementById('c_iA').textContent='$'+f0(tIA);
   document.getElementById('c_eA').textContent='$'+f0(tEA);
@@ -889,10 +851,7 @@ function showCierre(){
   document.getElementById('c_iU').textContent='u$'+f2(tIU);
   document.getElementById('c_eU').textContent='u$'+f2(tEU);
   document.getElementById('c_sfU').textContent='u$'+f2(sUSD);
-  const fechaStr=fechaActual.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('cFecha').textContent=fechaStr;
-  document.getElementById('cSub').textContent=`${getMes()} · ${movs.length} movs · ${verif} verificados${modoHistorial?' · HISTORIAL':''}`;
-
+  document.getElementById('cSub').textContent=`${movs.length} movs · ${verif} verificados`;
   const TIPOS=[
     {k:'COBRO',lbl:'Cobros',ic:'💰',col:'var(--grn)',bc:'#10b981'},
     {k:'PAGO',lbl:'Pagos',ic:'💸',col:'var(--red)',bc:'#ef4444'},
@@ -909,311 +868,61 @@ function showCierre(){
     const tIU2=ms.reduce((s,m)=>s+m.iU,0),tEU2=ms.reduce((s,m)=>s+m.eU,0);
     const nA=tIA2-tEA2,nU=tIU2-tEU2;
     cH+=`<div class="ci-cat" style="border-left-color:${t.bc}">
-      <div class="ci-cat-h" style="color:${t.col}">${t.ic} ${t.lbl} <span style="color:var(--mut);font-weight:400">(${ms.length})</span></div>
-      ${tIA2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▲ Ing ARS</span><span class="ci-cat-v cg">$${f0(tIA2)}</span></div>`:''}
-      ${tEA2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▼ Egr ARS</span><span class="ci-cat-v cr">$${f0(tEA2)}</span></div>`:''}
-      ${tIU2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▲ Ing USD</span><span class="ci-cat-v cg">u$${f2(tIU2)}</span></div>`:''}
-      ${tEU2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▼ Egr USD</span><span class="ci-cat-v cr">u$${f2(tEU2)}</span></div>`:''}
+      <div class="ci-cat-h" style="color:${t.col}">${t.ic} ${t.lbl} (${ms.length})</div>
+      ${tIA2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▲ ARS</span><span class="ci-cat-v cg">$${f0(tIA2)}</span></div>`:''}
+      ${tEA2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▼ ARS</span><span class="ci-cat-v cr">$${f0(tEA2)}</span></div>`:''}
+      ${tIU2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▲ USD</span><span class="ci-cat-v cg">u$${f2(tIU2)}</span></div>`:''}
+      ${tEU2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▼ USD</span><span class="ci-cat-v cr">u$${f2(tEU2)}</span></div>`:''}
       <div class="ci-cat-r" style="border-top:1px solid var(--br);margin-top:3px;padding-top:4px">
         <span class="ci-cat-l" style="font-weight:700">Neto</span>
-        <span class="ci-cat-v" style="color:${t.col}">${nA!==0?(nA>0?'+':'')+`$${f0(Math.abs(nA))}`:''}${nU!==0?(nA!==0?' / ':'')+`${nU>0?'+':''}u$${f2(Math.abs(nU))}`:''}
+        <span style="color:${t.col};font-weight:700;font-size:11px">${nA!==0?(nA>0?'+':'')+`$${f0(Math.abs(nA))}`:''}${nU!==0?(nA!==0?' / ':'')+`${nU>0?'+':''}u$${f2(Math.abs(nU))}`:''}
         </span>
       </div>
     </div>`;
   });
-  document.getElementById('ciCats').innerHTML=cH||'<span style="color:var(--mut);font-size:12px">Sin movimientos</span>';
-  document.getElementById('ciTbody').innerHTML=movs.map(m=>{
+  document.getElementById('ciCats').innerHTML=cH||'<span style="color:var(--mut)">Sin movimientos</span>';
+  document.getElementById('ciTbody').innerHTML=movs.map((m,i)=>{
     const chip=`<span class="chip ch-${m.tipo.toLowerCase()}">${m.tipo}</span>`;
-    const mO=m.tipo==='DIVISA'?`<span class="n cu">u$${f2(m.monto)}</span>`:m.moneda==='ARS'?`<span class="n ca">$${f0(m.monto)}</span>`:`<span class="n cu">u$${f2(m.monto)}</span>`;
-    const iA=m.iA>0?`<span class="n cg">$${f0(m.iA)}</span>`:'—';
-    const eA=m.eA>0?`<span class="n cr">$${f0(m.eA)}</span>`:'—';
-    const iU=m.iU>0?`<span class="n cg">u$${f2(m.iU)}</span>`:'—';
-    const eU=m.eU>0?`<span class="n cr">u$${f2(m.eU)}</span>`:'—';
-    return `<tr><td class="cm">${m.id}</td><td class="cm">${m.hora}</td><td style="font-size:9px;color:var(--mut)">${m.op}</td><td>${chip}</td><td><strong>${m.desc}</strong></td><td class="cm">$${m.cotiz}</td><td>${mO}</td><td>${iA}</td><td>${eA}</td><td><span class="n ${m.sARS>=0?'sa':'cr'}">$${f0(m.sARS)}</span></td><td>${iU}</td><td>${eU}</td><td><span class="n ${m.sUSD>=0?'su':'cr'}">u$${f2(m.sUSD)}</span></td><td style="font-size:9px;color:var(--mut)">${m.notas}</td><td style="text-align:center;color:${m.ok?'var(--grn)':'var(--orn)'}">${m.ok?'✓':'○'}</td></tr>`;
+    const mO=m.tipo==='DIVISA'?`u$${f2(m.monto)}`:m.moneda==='ARS'?`$${f0(m.monto)}`:`u$${f2(m.monto)}`;
+    return `<tr><td class="cm">${i+1}</td><td class="cm">${m.hora}</td><td style="font-size:9px;color:var(--mut)">${m.op}</td><td>${chip}</td><td><strong>${m.desc}</strong></td><td>${mO}</td><td>${m.iA>0?`<span class="cg">$${f0(m.iA)}</span>`:'—'}</td><td>${m.eA>0?`<span class="cr">$${f0(m.eA)}</span>`:'—'}</td><td><span class="${m.sARS>=0?'sa':'cr'}">$${f0(m.sARS)}</span></td><td>${m.iU>0?`<span class="cg">u$${f2(m.iU)}</span>`:'—'}</td><td>${m.eU>0?`<span class="cr">u$${f2(m.eU)}</span>`:'—'}</td><td><span class="${m.sUSD>=0?'su':'cr'}">u$${f2(m.sUSD)}</span></td><td style="text-align:center;color:${m.ok?'var(--grn)':'var(--orn)'}">${m.ok?'✓':'○'}</td></tr>`;
   }).join('');
-  generarTicket(tIA,tEA,tIU,tEU,verif,now);
+  generarTicket(tIA,tEA,tIU,tEU,verif);
   document.getElementById('moCierre').classList.add('show');
 }
 function closeCierre(){ document.getElementById('moCierre').classList.remove('show'); }
 
 // ===== TICKET =====
-function generarTicket(tIA,tEA,tIU,tEU,verif,now){
+function generarTicket(tIA,tEA,tIU,tEU,verif){
   const fecha=fechaActual.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
-  const hora=now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-  const TIPOS=[{k:'COBRO',lbl:'Cobros 💰'},{k:'PAGO',lbl:'Pagos 💸'},{k:'DIVISA',lbl:'Divisas 💱'},{k:'RETIRO',lbl:'Retiros 🏦'},{k:'GASTO',lbl:'Gastos 🧾'},{k:'HABER',lbl:'Haberes 👤'},{k:'LOGISTICA',lbl:'Logística 🚛'}];
-  let cats='';
-  TIPOS.forEach(t=>{
-    const ms=movs.filter(m=>m.tipo===t.k); if(!ms.length) return;
-    const tIA2=ms.reduce((s,m)=>s+m.iA,0),tEA2=ms.reduce((s,m)=>s+m.eA,0);
-    const tIU2=ms.reduce((s,m)=>s+m.iU,0),tEU2=ms.reduce((s,m)=>s+m.eU,0);
-    cats+=`\n  ${t.lbl} (${ms.length})`;
-    if(tIA2>0) cats+=`\n    ▲ ARS +$${f0(tIA2)}`;
-    if(tEA2>0) cats+=`\n    ▼ ARS -$${f0(tEA2)}`;
-    if(tIU2>0) cats+=`\n    ▲ USD +u$${f2(tIU2)}`;
-    if(tEU2>0) cats+=`\n    ▼ USD -u$${f2(tEU2)}`;
-  });
+  const hora=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   let movsList='';
-  movs.forEach(m=>{ const s=m.tipo==='DIVISA'?`u$${f2(m.monto)}`:m.moneda==='ARS'?`$${f0(m.monto)}`:`u$${f2(m.monto)}`; movsList+=`\n  ${m.ok?'✓':'○'} ${m.hora} [${m.tipo}] ${m.desc} — ${s}${m.notas?' ('+m.notas+')':''}`; });
-  ticketTexto=`╔═══════════════════════╗
-║  CIERRE DE CAJA 📋     ║
-║  WORK SHOP              ║
-╚═══════════════════════╝
-
-📅 ${fecha[0].toUpperCase()+fecha.slice(1)}
-🕐 Generado: ${hora}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-💵 CAJA ARS
-  Saldo inicial:  $${f0(saldoIniARS)}
-  ▲ Ingresos:   +$${f0(tIA)}
-  ▼ Egresos:    -$${f0(tEA)}
-  Saldo final:    $${f0(sARS)}
-
-💵 CAJA USD
-  Saldo inicial:  u$${f2(saldoIniUSD)}
-  ▲ Ingresos:   +u$${f2(tIU)}
-  ▼ Egresos:    -u$${f2(tEU)}
-  Saldo final:    u$${f2(sUSD)}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-📊 POR CATEGORÍA${cats}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-📝 MOVIMIENTOS (${movs.length} | ✓${verif})${movsList}
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-_Work Shop · Sistema de Caja_`;
+  movs.forEach(m=>{const s=m.tipo==='DIVISA'?`u$${f2(m.monto)}`:m.moneda==='ARS'?`$${f0(m.monto)}`:`u$${f2(m.monto)}`;movsList+=`\n  ${m.ok?'✓':'○'} ${m.hora} [${m.tipo}] ${m.desc} — ${s}${m.notas?' ('+m.notas+')':''}`;});
+  ticketTexto=`╔═══════════════════════╗\n║  CIERRE DE CAJA 📋     ║\n║  WORK SHOP              ║\n╚═══════════════════════╝\n\n📅 ${fecha[0].toUpperCase()+fecha.slice(1)}\n🕐 Generado: ${hora}\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n💵 CAJA ARS\n  Saldo inicial:  $${f0(saldoIniARS)}\n  ▲ Ingresos:   +$${f0(tIA)}\n  ▼ Egresos:    -$${f0(tEA)}\n  Saldo final:    $${f0(sARS)}\n\n💵 CAJA USD\n  Saldo inicial:  u$${f2(saldoIniUSD)}\n  ▲ Ingresos:   +u$${f2(tIU)}\n  ▼ Egresos:    -u$${f2(tEU)}\n  Saldo final:    u$${f2(sUSD)}\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n📝 MOVIMIENTOS (${movs.length} | ✓${verif})${movsList}\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n_Work Shop · Sistema de Caja_`;
   document.getElementById('ticketPreview').textContent=ticketTexto;
 }
-function copiarTicket(){ navigator.clipboard.writeText(ticketTexto).then(()=>toast('✓ Texto copiado')); }
+function copiarTicket(){ navigator.clipboard.writeText(ticketTexto).then(()=>toast('✓ Copiado')); }
 function compartirWA(){ window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(ticketTexto),'_blank'); }
-
-// ===== SELECTOR DE USUARIO =====
-let operadoraActual = localStorage.getItem('ws_op_session') || 'LAURA';
-
-function setUsuario(usuario){
-  operadoraActual = usuario;
-  op = usuario;
-  localStorage.setItem('ws_op_session', usuario);
-  
-  // Actualizar botones del header
-  const bL = document.getElementById('btnLaura');
-  const bM = document.getElementById('btnMaggie');
-  if(bL && bM){
-    if(usuario==='LAURA'){
-      bL.style.background='rgba(99,102,241,.2)'; bL.style.color='#818cf8'; bL.style.borderColor='#818cf8';
-      bM.style.background='var(--sf2)'; bM.style.color='var(--mut)'; bM.style.borderColor='var(--br)';
-    } else {
-      bM.style.background='rgba(16,185,129,.15)'; bM.style.color='var(--grn)'; bM.style.borderColor='var(--grn)';
-      bL.style.background='var(--sf2)'; bL.style.color='var(--mut)'; bL.style.borderColor='var(--br)';
-    }
-  }
-  
-  // Actualizar botones de operadora en el form
-  document.querySelectorAll('.ob').forEach(b => {
-    const onclick = b.getAttribute('onclick')||'';
-    b.classList.toggle('act', onclick.includes("'"+usuario+"'"));
-  });
-  
-  toast('Usuario: ' + (usuario==='LAURA'?'Laura':'Maggie'));
-}
-
-// Inicializar con usuario guardado y auto-conectar Sheets
-(function initUsuario(){
-  setUsuario(operadoraActual);
-  // Auto-conectar Sheets en segundo plano si hay URL guardada
-  const urlGuardada = localStorage.getItem('ws_asUrl');
-  if(urlGuardada){
-    asUrl = urlGuardada;
-    document.getElementById('asUrl').value = urlGuardada;
-    fetch(urlGuardada)
-      .then(r=>r.json())
-      .then(d=>{
-        if(d.ok){
-          shOk=true;
-          document.getElementById('shBadge').className='shb shb-ok';
-          document.getElementById('shBadge').textContent='📊 Sheets: conectado';
-          // Sincronizar datos en segundo plano
-          if(fechaActual) sincronizarEnSegundoPlano(fechaActual);
-        }
-      })
-      .catch(()=>{});
-  }
-})();
-
-// ===== REPORTES =====
-let reporteData = [];
-
-function showReportes(){
-  const hoy = new Date();
-  const hace30 = new Date(); hace30.setDate(hace30.getDate()-30);
-  document.getElementById('repDesde').value = toInputDate(hace30);
-  document.getElementById('repHasta').value = toInputDate(hoy);
-  document.getElementById('repTipo').value = '';
-  document.getElementById('repOp').value = '';
-  document.getElementById('repMon').value = '';
-  buscarReporte();
-  document.getElementById('moReportes').classList.add('show');
-}
-
-function toInputDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function fromInputDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
-
-function buscarReporte(){
-  const desde = document.getElementById('repDesde').value;
-  const hasta = document.getElementById('repHasta').value;
-  const filtTipo = document.getElementById('repTipo').value;
-  const filtOp = document.getElementById('repOp').value;
-  const filtMon = document.getElementById('repMon').value;
-  if(!desde||!hasta) return;
-  const dDesde = fromInputDate(desde);
-  const dHasta = fromInputDate(hasta); dHasta.setHours(23,59,59);
-  const diasEnRango = [];
-  const cur = new Date(dDesde);
-  while(cur <= dHasta){
-    const key = 'ws_dia_'+fmtKey(cur);
-    const raw = localStorage.getItem(key);
-    if(raw){
-      try{
-        const data = JSON.parse(raw);
-        const movsDia = (data.movimientos||[]).filter(m=>{
-          if(filtTipo && m.tipo !== filtTipo) return false;
-          if(filtOp && m.op !== filtOp) return false;
-          if(filtMon && m.tipo!=='DIVISA' && m.moneda !== filtMon) return false;
-          return true;
-        });
-        if(movsDia.length) diasEnRango.push({ fecha: new Date(cur), movs: movsDia, saldoIniARS: data.saldoIniARS||0, saldoIniUSD: data.saldoIniUSD||0 });
-      }catch(e){}
-    }
-    cur.setDate(cur.getDate()+1);
-  }
-  reporteData = diasEnRango;
-  let tIA=0,tEA=0,tIU=0,tEU=0;
-  diasEnRango.forEach(d=>d.movs.forEach(m=>{ tIA+=m.iA||0; tEA+=m.eA||0; tIU+=m.iU||0; tEU+=m.eU||0; }));
-  document.getElementById('rIA').textContent='$'+f0(tIA);
-  document.getElementById('rEA').textContent='$'+f0(tEA);
-  document.getElementById('rIU').textContent='u$'+f2(tIU);
-  document.getElementById('rEU').textContent='u$'+f2(tEU);
-  renderReporte(diasEnRango);
-}
-
-function renderReporte(dias){
-  const body = document.getElementById('repBody');
-  if(!dias.length){ body.innerHTML='<div class="rep-empty">📅 No hay movimientos en este rango con los filtros seleccionados</div>'; return; }
-  const CHIP_COL = {COBRO:'var(--grn)',PAGO:'var(--red)',DIVISA:'var(--ars)',RETIRO:'var(--pur)',GASTO:'var(--orn)',HABER:'var(--blu)',LOGISTICA:'#ec4899'};
-  body.innerHTML = dias.map(dia=>{
-    const tIA=dia.movs.reduce((s,m)=>s+(m.iA||0),0);
-    const tEA=dia.movs.reduce((s,m)=>s+(m.eA||0),0);
-    const tIU=dia.movs.reduce((s,m)=>s+(m.iU||0),0);
-    const tEU=dia.movs.reduce((s,m)=>s+(m.eU||0),0);
-    const fechaStr = dia.fecha.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    const rows = dia.movs.map(m=>{
-      const mOrig = m.tipo==='DIVISA'?`<span class="n cu">u$${f2(m.monto)}</span>`:m.moneda==='ARS'?`<span class="n ca">$${f0(m.monto)}</span>`:`<span class="n cu">u$${f2(m.monto)}</span>`;
-      const iA = m.iA>0?`<span class="n cg">$${f0(m.iA)}</span>`:'<span class="cm">—</span>';
-      const eA = m.eA>0?`<span class="n cr">$${f0(m.eA)}</span>`:'<span class="cm">—</span>';
-      const iU = m.iU>0?`<span class="n cg">u$${f2(m.iU)}</span>`:'<span class="cm">—</span>';
-      const eU = m.eU>0?`<span class="n cr">u$${f2(m.eU)}</span>`:'<span class="cm">—</span>';
-      const opName = m.op==='LAURA'?'Laura':m.op==='MAGGIE'?'Maggie':m.op;
-      return `<tr><td class="cm">${m.hora}</td><td><span style="font-size:9px;font-weight:800;color:${CHIP_COL[m.tipo]||'var(--txt)'}">${m.tipo}</span></td><td><strong>${m.desc}</strong>${m.notas?` <span class="cm" style="font-size:9px">(${m.notas})</span>`:''}</td><td>${mOrig}</td><td>${iA}</td><td>${eA}</td><td>${iU}</td><td>${eU}</td><td style="font-size:9px;color:var(--mut)">${opName}</td><td style="text-align:center;font-size:11px;color:${m.ok?'var(--grn)':'var(--br)'}">${m.ok?'✓':'○'}</td></tr>`;
-    }).join('');
-    return `<div class="rep-dia"><div class="rep-dia-hdr"><span>${fechaStr[0].toUpperCase()+fechaStr.slice(1)} — ${dia.movs.length} mov.</span><span style="display:flex;gap:12px;font-size:10px">${tIA>0?`<span class="cg">▲ARS +$${f0(tIA)}</span>`:''}${tEA>0?`<span class="cr">▼ARS -$${f0(tEA)}</span>`:''}${tIU>0?`<span class="cg">▲USD +u$${f2(tIU)}</span>`:''}${tEU>0?`<span class="cr">▼USD -u$${f2(tEU)}</span>`:''}</span></div><table class="rep-tbl"><thead><tr><th>Hora</th><th>Tipo</th><th>Descripción</th><th>Monto</th><th>Ing.ARS</th><th>Egr.ARS</th><th>Ing.USD</th><th>Egr.USD</th><th>Op.</th><th>✓</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  }).join('');
-}
-
-function exportarReporte(){
-  if(!reporteData.length) return toast('Sin datos para exportar',1);
-  const h=['Fecha','Hora','Tipo','Descripcion','Monto','Moneda','Ing ARS','Egr ARS','Ing USD','Egr USD','Operadora','Notas','Verificado'];
-  const rows=[];
-  reporteData.forEach(dia=>{
-    dia.movs.forEach(m=>{
-      const fecha=dia.fecha.toLocaleDateString('es-AR');
-      const opN=m.op==='LAURA'?'Laura':'Maggie';
-      rows.push([fecha,m.hora,m.tipo,'"'+m.desc+'"',m.monto,m.moneda,(m.iA||0).toFixed(2),(m.eA||0).toFixed(2),(m.iU||0).toFixed(4),(m.eU||0).toFixed(4),opN,'"'+(m.notas||'')+'"',m.ok?'SI':'NO']);
-    });
-  });
-  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download='reporte_ws_'+document.getElementById('repDesde').value+'_'+document.getElementById('repHasta').value+'.csv';
-  a.click(); toast('✓ Reporte exportado');
-}
 
 // ===== CERRAR DÍA =====
 function cerrarDia(){
   if(modoHistorial) return;
-  if(!confirm(`¿Cerrar el día?\n\nSaldo final → saldo inicial de mañana:\n  ARS: $${f0(sARS)}\n  USD: u$${f2(sUSD)}`)) return;
-  // Guardar el estado actual con flag de cerrado
-  const data=JSON.parse(localStorage.getItem(claveLS(fechaActual))||'{}');
-  data.cerrado=true; data.saldoFinalARS=sARS; data.saldoFinalUSD=sUSD;
-  localStorage.setItem(claveLS(fechaActual), JSON.stringify(data));
-  // El día siguiente hereda el saldo automáticamente al cargar (via cargarDia)
+  if(!confirm(`¿Cerrar el día?\n\nSaldo final:\n  ARS: $${f0(sARS)}\n  USD: u$${f2(sUSD)}\n\nPasa como saldo inicial de mañana.`)) return;
+  const manana=new Date(); manana.setDate(manana.getDate()+1);
+  localStorage.setItem('ws_siARS_'+fmtFecha(manana), sARS.toFixed(2));
+  localStorage.setItem('ws_siUSD_'+fmtFecha(manana), sUSD.toFixed(4));
   closeCierre();
-  toast(`✓ Día cerrado · Mañana arranca con $${f0(sARS)} / u$${f2(sUSD)}`);
-  actualizarDiasGuardados();
-}
-
-// ===== SHEETS =====
-async function conectar(){
-  const url=document.getElementById('asUrl').value.trim();
-  if(!url) return toast('Ingresá la URL del Apps Script',1);
-  try{
-    const r=await fetch(url);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const d=await r.json();
-    if(!d.ok) throw new Error(d.msg||'Error');
-    asUrl=url; shOk=true;
-    document.getElementById('shBadge').className='shb shb-ok';
-    document.getElementById('shBadge').textContent='📊 Sheets: conectado';
-    localStorage.setItem('ws_asUrl', url);
-    toast('✓ Sheets conectado');
-    // Sincronizar en segundo plano sin borrar datos locales
-    setTimeout(()=>sincronizarEnSegundoPlano(fechaActual||new Date()), 500);
-  }catch(e){ toast('Error: '+e.message,1); }
-}
-
-async function syncFila(mov){
-  if(!shOk) return;
-  const nombreHoja=getMes(fechaActual||new Date());
-  const row=[mov.id,mov.fecha,mov.hora,mov.tipo,mov.desc,mov.cotiz,mov.monto,mov.moneda,mov.iA.toFixed(2),mov.eA.toFixed(2),mov.sARS.toFixed(2),mov.iU.toFixed(4),mov.eU.toFixed(4),mov.sUSD.toFixed(4),mov.op,mov.notas,mov.ok?'TRUE':'FALSE'];
-  try{
-    const params = new URLSearchParams({
-      action:'append',
-      sheet: nombreHoja,
-      row: JSON.stringify(row)
-    });
-    await fetch(asUrl + '?' + params.toString());
-  }catch(e){ console.warn('Sheets sync:',e); }
-}
-
-async function updVerif(i){
-  if(!shOk) return;
-  const m=movs[i];
-  try{
-    const params = new URLSearchParams({action:'updateVerif',sheet:getMes(fechaActual||new Date()),id:m.id,verificado:m.ok?'TRUE':'FALSE'});
-    await fetch(asUrl+'?'+params.toString());
-  }catch(e){}
-}
-
-async function reformatearSheets(){
-  if(!shOk) return toast('Primero conectá con Sheets',1);
-  toast('🎨 Aplicando formato...');
-  try{
-    const r=await fetch(asUrl,{method:'POST',body:JSON.stringify({action:'formatSheet',sheet:getMes(fechaActual)}),headers:{'Content-Type':'text/plain;charset=utf-8'}});
-    const d=await r.json();
-    if(d.ok) toast('✓ Tema oscuro aplicado — '+d.filas+' filas');
-    else toast('Error: '+d.error,1);
-  }catch(e){ toast('Error: '+e.message,1); }
+  toast(`✓ Día cerrado · Mañana arranca $${f0(sARS)} / u$${f2(sUSD)}`);
 }
 
 // ===== CSV =====
 function exportCSV(){
   if(!movs.length) return toast('Sin movimientos',1);
   const h=['#','Fecha','Hora','Tipo','Descripcion','Cotizacion','Monto','Moneda','Ing ARS','Egr ARS','Saldo ARS','Ing USD','Egr USD','Saldo USD','Op','Notas','Verificado'];
-  const rows=movs.map(m=>[m.id,m.fecha,m.hora,m.tipo,`"${m.desc}"`,m.cotiz,m.monto,m.moneda,m.iA.toFixed(2),m.eA.toFixed(2),m.sARS.toFixed(2),m.iU.toFixed(4),m.eU.toFixed(4),m.sUSD.toFixed(4),m.op,`"${m.notas}"`,m.ok?'SI':'NO']);
+  const rows=movs.map((m,i)=>[i+1,m.fecha,m.hora,m.tipo,`"${m.desc}"`,m.cotiz,m.monto,m.moneda,m.iA.toFixed(2),m.eA.toFixed(2),m.sARS.toFixed(2),m.iU.toFixed(4),m.eU.toFixed(4),m.sUSD.toFixed(4),m.op,`"${m.notas}"`,m.ok?'SI':'NO']);
   const csv=[h,...rows].map(r=>r.join(',')).join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download=`caja_ws_${fmtKey(fechaActual)}.csv`;
+  a.download=`caja_ws_${fmtFecha(fechaActual)}.csv`;
   a.click(); toast('✓ CSV exportado');
 }
 
@@ -1227,72 +936,12 @@ function limpiar(){
 }
 function f0(n){ return n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function f2(n){ return n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:4}); }
-function toast(msg,w){
+function toast(msg,w,e){
   const t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast'+(w?' w':'')+' show';
-  setTimeout(()=>t.className='toast'+(w?' w':''),2800);
+  t.textContent=msg;
+  t.className='toast'+(w?' w':e?' e':'')+' show';
+  setTimeout(()=>t.className='toast'+(w?' w':e?' e':''),2800);
 }
-
-// Recordar URL de Apps Script entre sesiones
-const DEFAULT_AS_URL = 'https://script.google.com/macros/s/AKfycbzYj5fuhVRHc1NhloV6cDxQDZLU0oYbCLwuUVfOamCinN-lv6u_FkHWwnI1hIpWCmS7ug/exec';
-const savedUrl = localStorage.getItem('ws_asUrl') || DEFAULT_AS_URL;
-document.getElementById('asUrl').value = savedUrl;
 </script>
-
-<!-- MODAL REPORTES -->
-<div class="mo" id="moReportes">
-  <div class="md" style="width:900px">
-    <div class="rep-head">
-      <div class="rep-tit">📊 Reportes — Work Shop</div>
-    </div>
-    <div class="rep-filters">
-      <div class="rep-fld"><label>Desde</label><input type="date" id="repDesde"></div>
-      <div class="rep-fld"><label>Hasta</label><input type="date" id="repHasta"></div>
-      <div class="rep-fld">
-        <label>Tipo</label>
-        <select id="repTipo">
-          <option value="">Todos los tipos</option>
-          <option value="COBRO">Cobros</option>
-          <option value="PAGO">Pagos</option>
-          <option value="DIVISA">Divisas</option>
-          <option value="RETIRO">Retiros</option>
-          <option value="GASTO">Gastos</option>
-          <option value="HABER">Haberes</option>
-          <option value="LOGISTICA">Logística</option>
-        </select>
-      </div>
-      <div class="rep-fld">
-        <label>Operadora</label>
-        <select id="repOp">
-          <option value="">Todas</option>
-          <option value="LAURA">Laura</option>
-          <option value="MAGGIE">Maggie</option>
-        </select>
-      </div>
-      <div class="rep-fld">
-        <label>Moneda</label>
-        <select id="repMon">
-          <option value="">Todas</option>
-          <option value="ARS">ARS</option>
-          <option value="USD">USD</option>
-        </select>
-      </div>
-      <button class="btn-rep-buscar" onclick="buscarReporte()">🔍 Buscar</button>
-    </div>
-    <div class="rep-summary">
-      <div class="rep-sum-box"><div class="rep-sum-lbl">▲ Total Ingresos ARS</div><div class="rep-sum-val cg" id="rIA">$0,00</div></div>
-      <div class="rep-sum-box"><div class="rep-sum-lbl">▼ Total Egresos ARS</div><div class="rep-sum-val cr" id="rEA">$0,00</div></div>
-      <div class="rep-sum-box"><div class="rep-sum-lbl">▲ Total Ingresos USD</div><div class="rep-sum-val cg" id="rIU">u$0,00</div></div>
-      <div class="rep-sum-box"><div class="rep-sum-lbl">▼ Total Egresos USD</div><div class="rep-sum-val cr" id="rEU">u$0,00</div></div>
-    </div>
-    <div class="rep-body" id="repBody">
-      <div class="rep-empty">Seleccioná un rango de fechas y hacé clic en Buscar</div>
-    </div>
-    <div class="ci-foot">
-      <button class="btn-csv-ci" onclick="exportarReporte()">⬇ Exportar CSV</button>
-      <button class="btn-mc" onclick="document.getElementById('moReportes').classList.remove('show')">Cerrar</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
