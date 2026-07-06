@@ -267,6 +267,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
   <div class="sc"><span class="sl">▼ Egr USD</span><span class="svs cr" id="eUSD">u$0,00</span></div>
   <div class="sepv"></div>
   <div class="sc"><span class="sl">Movimientos</span><span class="svs cm" id="cMov">0</span></div>
+  <span id="diaStatus" style="display:none;font-size:11px;font-weight:800;padding:3px 10px;border-radius:12px;border:1px solid var(--orn);background:rgba(245,158,11,.08);color:var(--orn)">🔒 Día cerrado</span>
 </div>
 
 <div class="main">
@@ -502,6 +503,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
     <div class="ci-foot">
       <button class="btn-impr" onclick="window.print()">🖨 Imprimir</button>
       <button class="btn-cerrar-dia" id="btnCerrarDia" onclick="cerrarDia()">✓ Cerrar día</button>
+      <button id="btnAnularCierre" onclick="anularCierre()" style="display:none;padding:8px 16px;border-radius:6px;border:1px solid var(--orn);background:rgba(245,158,11,.1);color:var(--orn);font-size:12px;font-weight:800;cursor:pointer">↩ Anular cierre</button>
       <button class="btn-mc" onclick="closeCierre()">Cerrar</button>
     </div>
   </div>
@@ -517,6 +519,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ===== ESTADO =====
 let movs=[], tipo=null, moneda='ARS', dir=null;
+let diaCerrado=false;
 let op = localStorage.getItem('ws_op') || 'LAURA';
 let saldoIniARS=0, saldoIniUSD=0, sARS=0, sUSD=0;
 let fechaActual=null, modoHistorial=false, editIdx=null;
@@ -763,8 +766,15 @@ async function cargarDia(d){
   document.getElementById('histBadge').style.display=modoHistorial?'inline':'none';
   document.getElementById('btnHoyNav').classList.toggle('active',esHoy(d));
   document.getElementById('tblTitle').textContent=modoHistorial?'Historial '+d.toLocaleDateString('es-AR',{day:'numeric',month:'long'}):'Movimientos del día';
-  document.getElementById('btnCerrarDia').style.display=modoHistorial?'none':'block';
   document.getElementById('datePicker').value=fechaStr;
+  
+  // Verificar si el día está cerrado
+  if(!modoHistorial){
+    diaCerrado = await verificarSiDiaCerrado(fechaStr);
+  } else {
+    diaCerrado = false;
+  }
+  actualizarEstadoCierre();
 }
 
 // ===== SALDO INICIAL =====
@@ -1070,6 +1080,54 @@ function showCierre(){
   generarTicket(tIA,tEA,tIU,tEU,verif);
   document.getElementById('moCierre').classList.add('show');
   resetArqueo();
+  // Mostrar/ocultar botones según estado del día
+  document.getElementById('btnCerrarDia').style.display = diaCerrado ? 'none' : 'block';
+  document.getElementById('btnAnularCierre').style.display = diaCerrado && !modoHistorial ? 'block' : 'none';
+}
+
+
+// ===== ESTADO CIERRE =====
+function actualizarEstadoCierre(){
+  const fp = document.getElementById('formPanel');
+  const status = document.getElementById('diaStatus');
+  const btnCerrar = document.getElementById('btnCerrarDia');
+  const btnAnular = document.getElementById('btnAnularCierre');
+  
+  if(diaCerrado && !modoHistorial){
+    fp.classList.add('disabled');
+    status.style.display = 'inline';
+    btnCerrar.style.display = 'none';
+    btnAnular.style.display = 'block';
+  } else {
+    fp.classList.remove('disabled');
+    status.style.display = 'none';
+    btnCerrar.style.display = modoHistorial ? 'none' : 'block';
+    btnAnular.style.display = 'none';
+  }
+}
+
+async function anularCierre(){
+  if(!confirm('¿Anular el cierre del día?\nPodrás seguir cargando movimientos.\nEl saldo de mañana también se borrará.')) return;
+  
+  const fechaStr = fmtFecha(fechaActual);
+  const manana = new Date(fechaActual); manana.setDate(manana.getDate()+1);
+  
+  // Borrar registro de cierre de hoy
+  await sb.from('saldos_iniciales').delete().eq('fecha', fechaStr+'_cierre');
+  
+  // Borrar saldo de mañana si fue generado por el cierre
+  await sb.from('saldos_iniciales').delete().eq('fecha', fmtFecha(manana));
+  
+  diaCerrado = false;
+  actualizarEstadoCierre();
+  closeCierre();
+  toast('↩ Cierre anulado · Podés seguir cargando movimientos');
+}
+
+async function verificarSiDiaCerrado(fechaStr){
+  const {data} = await sb.from('saldos_iniciales')
+    .select('fecha').eq('fecha', fechaStr+'_cierre').maybeSingle();
+  return !!data;
 }
 
 // ===== ARQUEO DE CAJA =====
@@ -1174,6 +1232,8 @@ async function cerrarDia(){
     saldo_usd: sUSD,
     updated_at: new Date().toISOString()
   });
+  diaCerrado = true;
+  actualizarEstadoCierre();
   closeCierre();
   toast(`✓ Día cerrado · Mañana arranca $${f0(sARS)} / u$${f2(sUSD)}`);
   console.log('Saldo guardado para mañana:', fmtFecha(manana), sARS, sUSD);
