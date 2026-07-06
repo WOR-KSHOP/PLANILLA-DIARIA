@@ -715,23 +715,37 @@ async function cargarDia(d){
   }
   
   // Saldo inicial desde Supabase
-  const {data:saldoData} = await sb.from('saldos_iniciales')
-    .select('*').eq('fecha', fechaStr).single();
-  if(saldoData){
+  // 1. Buscar si hay saldo guardado explícitamente para este día
+  const {data:saldoData, error:saldoErr} = await sb.from('saldos_iniciales')
+    .select('*').eq('fecha', fechaStr).maybeSingle();
+
+  if(saldoData && !saldoErr){
+    // Hay saldo guardado para este día
     saldoIniARS = parseFloat(saldoData.saldo_ars)||0;
     saldoIniUSD = parseFloat(saldoData.saldo_usd)||0;
   } else {
-    // Si no hay saldo guardado, buscar el saldo final del día anterior
-    const ayer = new Date(d); ayer.setDate(ayer.getDate()-1);
-    const ayerStr = fmtFecha(ayer);
-    const {data:movAyer} = await sb.from('movimientos')
-      .select('saldo_ars,saldo_usd').eq('fecha', ayerStr)
-      .order('id', {ascending:false}).limit(1);
-    if(movAyer && movAyer.length > 0){
-      saldoIniARS = parseFloat(movAyer[0].saldo_ars)||0;
-      saldoIniUSD = parseFloat(movAyer[0].saldo_usd)||0;
+    // No hay saldo explícito — heredar del último movimiento registrado
+    // Buscar en movimientos de días anteriores el último saldo
+    const {data:ultMov, error:movErr} = await sb.from('movimientos')
+      .select('saldo_ars, saldo_usd, fecha')
+      .lt('fecha', fechaStr)
+      .order('fecha', {ascending:false})
+      .order('id', {ascending:false})
+      .limit(1);
+
+    if(ultMov && ultMov.length > 0 && !movErr){
+      saldoIniARS = parseFloat(ultMov[0].saldo_ars)||0;
+      saldoIniUSD = parseFloat(ultMov[0].saldo_usd)||0;
+      // Guardar automáticamente en saldos_iniciales para este día
+      await sb.from('saldos_iniciales').upsert({
+        fecha: fechaStr,
+        saldo_ars: saldoIniARS,
+        saldo_usd: saldoIniUSD,
+        updated_at: new Date().toISOString()
+      });
     } else {
-      saldoIniARS = 0; saldoIniUSD = 0;
+      saldoIniARS = 0;
+      saldoIniUSD = 0;
     }
   }
   document.getElementById('siARS').value=saldoIniARS;
@@ -1146,15 +1160,23 @@ async function cerrarDia(){
   if(modoHistorial) return;
   if(!confirm(`¿Cerrar el día?\n\nSaldo final:\n  ARS: $${f0(sARS)}\n  USD: u$${f2(sUSD)}\n\nPasa como saldo inicial de mañana.`)) return;
   const manana=new Date(); manana.setDate(manana.getDate()+1);
-  // Guardar saldo de mañana en Supabase
+  // Guardar saldo de mañana en Supabase como saldo inicial
   await sb.from('saldos_iniciales').upsert({
     fecha: fmtFecha(manana),
     saldo_ars: sARS,
     saldo_usd: sUSD,
     updated_at: new Date().toISOString()
   });
+  // También registrar el cierre de hoy explícitamente
+  await sb.from('saldos_iniciales').upsert({
+    fecha: fmtFecha(fechaActual)+'_cierre',
+    saldo_ars: sARS,
+    saldo_usd: sUSD,
+    updated_at: new Date().toISOString()
+  });
   closeCierre();
   toast(`✓ Día cerrado · Mañana arranca $${f0(sARS)} / u$${f2(sUSD)}`);
+  console.log('Saldo guardado para mañana:', fmtFecha(manana), sARS, sUSD);
 }
 
 // ===== CSV =====
