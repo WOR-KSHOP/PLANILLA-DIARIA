@@ -434,15 +434,32 @@ function suscribirRealtime(fecha){
   // Desuscribir anterior
   if(realtimeSub){ sb.removeChannel(realtimeSub); realtimeSub=null; }
   
-  realtimeSub = sb.channel('movimientos-'+fecha)
+  realtimeSub = sb.channel('caja-'+fecha)
     .on('postgres_changes', {
       event: '*',
       schema: 'public',
       table: 'movimientos',
       filter: `fecha=eq.${fecha}`
     }, (payload) => {
-      // Recargar datos cuando hay cambios
       recargarDesdeBD(fecha);
+    })
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'saldos_iniciales',
+      filter: `fecha=eq.${fecha}`
+    }, (payload) => {
+      // Actualizar saldo inicial en tiempo real
+      if(payload.new){
+        saldoIniARS = parseFloat(payload.new.saldo_ars)||0;
+        saldoIniUSD = parseFloat(payload.new.saldo_usd)||0;
+        document.getElementById('siARS').value = saldoIniARS;
+        document.getElementById('siUSD').value = saldoIniUSD;
+        sARS=saldoIniARS; sUSD=saldoIniUSD;
+        movs.forEach(m=>{ sARS+=m.iA-m.eA; sUSD+=m.iU-m.eU; });
+        updSaldos();
+        toast('Saldo inicial actualizado por otra operadora');
+      }
     })
     .subscribe((status) => {
       if(status === 'SUBSCRIBED'){
@@ -509,15 +526,7 @@ async function initUI(){
   // Init usuario
   setUsuario(op, false);
   
-  // Cargar saldo inicial de localStorage
-  const keyARS='ws_siARS_'+fmtFecha(n);
-  const keyUSD='ws_siUSD_'+fmtFecha(n);
-  saldoIniARS=parseFloat(localStorage.getItem(keyARS)||'0');
-  saldoIniUSD=parseFloat(localStorage.getItem(keyUSD)||'0');
-  document.getElementById('siARS').value=saldoIniARS;
-  document.getElementById('siUSD').value=saldoIniUSD;
-  
-  // Cargar día de hoy
+  // Cargar día de hoy (saldo viene de Supabase)
   await cargarDia(new Date());
 }
 
@@ -568,11 +577,26 @@ async function cargarDia(d){
     document.getElementById('loadingOverlay').classList.remove('show');
   }
   
-  // Saldo inicial
-  const keyARS='ws_siARS_'+fechaStr;
-  const keyUSD='ws_siUSD_'+fechaStr;
-  saldoIniARS=parseFloat(localStorage.getItem(keyARS)||'0');
-  saldoIniUSD=parseFloat(localStorage.getItem(keyUSD)||'0');
+  // Saldo inicial desde Supabase
+  const {data:saldoData} = await sb.from('saldos_iniciales')
+    .select('*').eq('fecha', fechaStr).single();
+  if(saldoData){
+    saldoIniARS = parseFloat(saldoData.saldo_ars)||0;
+    saldoIniUSD = parseFloat(saldoData.saldo_usd)||0;
+  } else {
+    // Si no hay saldo guardado, buscar el saldo final del día anterior
+    const ayer = new Date(d); ayer.setDate(ayer.getDate()-1);
+    const ayerStr = fmtFecha(ayer);
+    const {data:movAyer} = await sb.from('movimientos')
+      .select('saldo_ars,saldo_usd').eq('fecha', ayerStr)
+      .order('id', {ascending:false}).limit(1);
+    if(movAyer && movAyer.length > 0){
+      saldoIniARS = parseFloat(movAyer[0].saldo_ars)||0;
+      saldoIniUSD = parseFloat(movAyer[0].saldo_usd)||0;
+    } else {
+      saldoIniARS = 0; saldoIniUSD = 0;
+    }
+  }
   document.getElementById('siARS').value=saldoIniARS;
   document.getElementById('siUSD').value=saldoIniUSD;
   document.getElementById('siARS').disabled=modoHistorial;
@@ -593,17 +617,23 @@ async function cargarDia(d){
 }
 
 // ===== SALDO INICIAL =====
-function setSaldoIni(){
+async function setSaldoIni(){
   if(modoHistorial) return;
   saldoIniARS=parseFloat(document.getElementById('siARS').value)||0;
   saldoIniUSD=parseFloat(document.getElementById('siUSD').value)||0;
-  localStorage.setItem('ws_siARS_'+fmtFecha(fechaActual), saldoIniARS);
-  localStorage.setItem('ws_siUSD_'+fmtFecha(fechaActual), saldoIniUSD);
+  // Guardar en Supabase
+  const {error} = await sb.from('saldos_iniciales').upsert({
+    fecha: fmtFecha(fechaActual),
+    saldo_ars: saldoIniARS,
+    saldo_usd: saldoIniUSD,
+    updated_at: new Date().toISOString()
+  });
+  if(error) console.error('Error guardando saldo:', error);
   // Recalcular saldos
   sARS=saldoIniARS; sUSD=saldoIniUSD;
   movs.forEach(m=>{ sARS+=m.iA-m.eA; sUSD+=m.iU-m.eU; m.sARS=sARS; m.sUSD=sUSD; });
   render(); updSaldos();
-  toast('✓ Saldo inicial actualizado');
+  toast('✓ Saldo inicial sincronizado');
 }
 
 // ===== NAVEGACIÓN =====
@@ -904,12 +934,17 @@ function copiarTicket(){ navigator.clipboard.writeText(ticketTexto).then(()=>toa
 function compartirWA(){ window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(ticketTexto),'_blank'); }
 
 // ===== CERRAR DÍA =====
-function cerrarDia(){
+async function cerrarDia(){
   if(modoHistorial) return;
   if(!confirm(`¿Cerrar el día?\n\nSaldo final:\n  ARS: $${f0(sARS)}\n  USD: u$${f2(sUSD)}\n\nPasa como saldo inicial de mañana.`)) return;
   const manana=new Date(); manana.setDate(manana.getDate()+1);
-  localStorage.setItem('ws_siARS_'+fmtFecha(manana), sARS.toFixed(2));
-  localStorage.setItem('ws_siUSD_'+fmtFecha(manana), sUSD.toFixed(4));
+  // Guardar saldo de mañana en Supabase
+  await sb.from('saldos_iniciales').upsert({
+    fecha: fmtFecha(manana),
+    saldo_ars: sARS,
+    saldo_usd: sUSD,
+    updated_at: new Date().toISOString()
+  });
   closeCierre();
   toast(`✓ Día cerrado · Mañana arranca $${f0(sARS)} / u$${f2(sUSD)}`);
 }
