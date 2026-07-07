@@ -385,6 +385,24 @@ tbody td{padding:6px 8px;vertical-align:middle}
         <div class="arqueo-col">
           <div class="arqueo-col-title" style="color:var(--ars)">$ Pesos Argentinos</div>
           <div class="arqueo-row">
+            <span class="arqueo-denom" style="color:var(--ars)">$10</span>
+            <span class="arqueo-x">×</span>
+            <input class="arqueo-input" type="number" min="0" value="0" id="bARS10" oninput="calcArqueo()">
+            <span class="arqueo-subtotal" id="sARS10">= $0</span>
+          </div>
+          <div class="arqueo-row">
+            <span class="arqueo-denom" style="color:var(--ars)">$20</span>
+            <span class="arqueo-x">×</span>
+            <input class="arqueo-input" type="number" min="0" value="0" id="bARS20" oninput="calcArqueo()">
+            <span class="arqueo-subtotal" id="sARS20">= $0</span>
+          </div>
+          <div class="arqueo-row">
+            <span class="arqueo-denom" style="color:var(--ars)">$50</span>
+            <span class="arqueo-x">×</span>
+            <input class="arqueo-input" type="number" min="0" value="0" id="bARS50" oninput="calcArqueo()">
+            <span class="arqueo-subtotal" id="sARS50">= $0</span>
+          </div>
+          <div class="arqueo-row">
             <span class="arqueo-denom" style="color:var(--ars)">$100</span>
             <span class="arqueo-x">×</span>
             <input class="arqueo-input" type="number" min="0" value="0" id="bARS100" oninput="calcArqueo()">
@@ -1134,6 +1152,9 @@ async function verificarSiDiaCerrado(fechaStr){
 function calcArqueo(){
   // ARS
   const billARS = [
+    {id:'bARS10',    val:10},
+    {id:'bARS20',    val:20},
+    {id:'bARS50',    val:50},
     {id:'bARS100',   val:100},
     {id:'bARS200',   val:200},
     {id:'bARS500',   val:500},
@@ -1187,7 +1208,7 @@ function calcArqueo(){
 }
 
 function resetArqueo(){
-  ['bARS100','bARS200','bARS500','bARS1000','bARS2000','bARS10000','bARS20000',
+  ['bARS10','bARS20','bARS50','bARS100','bARS200','bARS500','bARS1000','bARS2000','bARS10000','bARS20000',
    'bUSD1','bUSD5','bUSD10','bUSD20','bUSD50','bUSD100'].forEach(id=>{
     document.getElementById(id).value=0;
   });
@@ -1224,27 +1245,68 @@ function compartirWA(){ window.open('https://api.whatsapp.com/send?text='+encode
 // ===== CERRAR DÍA =====
 async function cerrarDia(){
   if(modoHistorial) return;
-  if(!confirm('¿Cerrar el día? Saldo final: ARS $'+f0(sARS)+' / USD u$'+f2(sUSD)+'. Pasa como saldo inicial de mañana.')) return;
+
+  // Leer saldo físico del arqueo si fue completado
+  const fisARS = calcTotalArqueoARS();
+  const fisUSD = calcTotalArqueoUSD();
+  const hayArqueo = fisARS > 0 || fisUSD > 0;
+
+  // El saldo que pasa al día siguiente = saldo físico del arqueo (si se hizo) o saldo digital
+  const saldoMananaARS = hayArqueo ? fisARS : sARS;
+  const saldoMananaUSD = hayArqueo ? fisUSD : sUSD;
+
+  const difA = sARS - fisARS;
+  const difU = sUSD - fisUSD;
+  const difTexto = hayArqueo
+    ? ('\nArqueo físico ARS: $'+f0(fisARS)+(difA!==0?' (Dif: $'+f0(Math.abs(difA))+(difA>0?' FALTA':' SOBRA')+')':'✓')+
+       '\nArqueo físico USD: u$'+f2(fisUSD)+(difU!==0?' (Dif: u$'+f2(Math.abs(difU))+(difU>0?' FALTA':' SOBRA')+')':'✓'))
+    : '\n(Sin arqueo — se usa saldo digital)';
+
+  if(!confirm(
+    '¿Cerrar el día?'+
+    '\n\nSaldo digital: $'+f0(sARS)+' / u$'+f2(sUSD)+
+    difTexto+
+    '\n\nSaldo inicial de mañana: $'+f0(saldoMananaARS)+' / u$'+f2(saldoMananaUSD)
+  )) return;
+
   const manana=new Date(); manana.setDate(manana.getDate()+1);
-  // Guardar saldo de mañana en Supabase como saldo inicial
+
+  // Guardar saldo de mañana usando el físico si hay arqueo
   await sb.from('saldos_iniciales').upsert({
     fecha: fmtFecha(manana),
-    saldo_ars: sARS,
-    saldo_usd: sUSD,
+    saldo_ars: saldoMananaARS,
+    saldo_usd: saldoMananaUSD,
     updated_at: new Date().toISOString()
   });
-  // También registrar el cierre de hoy explícitamente
+
+  // Registrar cierre de hoy
   await sb.from('saldos_iniciales').upsert({
     fecha: fmtFecha(fechaActual)+'_cierre',
-    saldo_ars: sARS,
-    saldo_usd: sUSD,
+    saldo_ars: saldoMananaARS,
+    saldo_usd: saldoMananaUSD,
     updated_at: new Date().toISOString()
   });
+
   diaCerrado = true;
   actualizarEstadoCierre();
   closeCierre();
-  toast('✓ Día cerrado · Mañana arranca $'+f0(sARS)+' / u$'+f2(sUSD));
-  console.log('Saldo guardado para mañana:', fmtFecha(manana), sARS, sUSD);
+  toast('✓ Día cerrado · Mañana arranca $'+f0(saldoMananaARS)+' / u$'+f2(saldoMananaUSD));
+}
+
+// ===== HELPERS ARQUEO =====
+function calcTotalArqueoARS(){
+  const denoms = [10,20,50,100,200,500,1000,2000,10000,20000];
+  return denoms.reduce((t,d)=>{
+    const el = document.getElementById('bARS'+d);
+    return t + (el ? (parseInt(el.value)||0)*d : 0);
+  }, 0);
+}
+function calcTotalArqueoUSD(){
+  const denoms = [1,5,10,20,50,100];
+  return denoms.reduce((t,d)=>{
+    const el = document.getElementById('bUSD'+d);
+    return t + (el ? (parseInt(el.value)||0)*d : 0);
+  }, 0);
 }
 
 // ===== CSV =====
