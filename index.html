@@ -1320,7 +1320,7 @@ function generarTicket(tIA,tEA,tIU,tEU,verif){
   const elTA=document.getElementById('totalArqueoARS');
   const tUSDarq = elTU ? parseFloat(elTU.textContent.replace('u$','').replace(/\./g,'').replace(',','.')) || 0 : 0;
   const tARS = elTA ? parseFloat(elTA.textContent.replace('$','').replace(/\./g,'').replace(',','.')) || 0 : 0;
-  const tUSDarq = parseFloat(document.getElementById('totalArqueoUSD').textContent.replace('u$','').replace(/\./g,'').replace(',','.')) || 0;
+  const tUSDarq = elTU ? parseFloat(elTU.textContent.replace('u$','').replace(/\./g,'').replace(',','.')) || 0 : 0;
   const hasArqueo = document.getElementById('bARS100').value > 0 || document.getElementById('bUSD100').value > 0;
   const difARSnum = sARS - tARS;
   const difUSDnum = sUSD - tUSDarq;
