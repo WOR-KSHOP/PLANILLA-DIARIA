@@ -1,0 +1,389 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Work Shop · Pago</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--sf:#1a1d27;--sf2:#22263a;--br:#2e3350;
+  --acc:#3b82f6;--grn:#10b981;--red:#ef4444;--orn:#f59e0b;
+  --ars:#fbbf24;--usd:#34d399;--usdt:#a78bfa;
+  --txt:#e8eaf0;--mut:#8b90a8;
+  --fnt:'Segoe UI',system-ui,sans-serif
+}
+body{font-family:var(--fnt);background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+
+.logo{font-size:28px;font-weight:900;margin-bottom:6px;text-align:center}
+.logo span{color:var(--acc)}
+.sub{font-size:13px;color:var(--mut);text-align:center;margin-bottom:32px}
+
+/* PANEL PRINCIPAL */
+.panel{background:var(--sf);border:1px solid var(--br);border-radius:18px;padding:32px 28px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+/* ESTADOS */
+.screen{display:none}
+.screen.active{display:flex;flex-direction:column;gap:20px}
+
+/* CAMPO */
+.fld{display:flex;flex-direction:column;gap:8px}
+.fld label{font-size:11px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px}
+input[type=text],input[type=number]{
+  background:var(--sf2);border:2px solid var(--br);border-radius:10px;
+  padding:16px 14px;color:var(--txt);font-size:18px;font-family:var(--fnt);
+  width:100%;transition:border-color .15s
+}
+input[type=text]:focus,input[type=number]:focus{outline:none;border-color:var(--acc)}
+input::placeholder{color:var(--mut)}
+
+/* MONEDA SELECTOR */
+.mon-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.mon-btn{padding:16px 8px;border-radius:10px;border:2px solid var(--br);background:var(--sf2);color:var(--mut);font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.mon-btn .ic{font-size:22px}
+.mon-btn:hover{border-color:var(--acc)}
+.mon-btn.act-ars{border-color:var(--ars);background:rgba(251,191,36,.1);color:var(--ars)}
+.mon-btn.act-usd{border-color:var(--usd);background:rgba(52,211,153,.1);color:var(--usd)}
+.mon-btn.act-usdt{border-color:var(--usdt);background:rgba(167,139,250,.1);color:var(--usdt)}
+
+/* PREVIEW */
+.preview{background:var(--sf2);border:1px solid var(--br);border-radius:12px;padding:20px;text-align:center;display:none}
+.prev-label{font-size:11px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.prev-val{font-size:36px;font-weight:900;font-variant-numeric:tabular-nums}
+
+/* RESUMEN */
+.resumen{background:var(--sf2);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.res-row{display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.res-lbl{color:var(--mut)}
+.res-val{font-weight:800}
+
+/* BOTONES */
+.btn-main{padding:18px;border-radius:12px;border:none;font-size:16px;font-weight:900;cursor:pointer;transition:all .15s;width:100%}
+.btn-pagar{background:var(--grn);color:#fff}
+.btn-pagar:hover{background:#059669}
+.btn-pagar:disabled{background:var(--br);color:var(--mut);cursor:not-allowed}
+.btn-volver{background:var(--sf2);border:2px solid var(--br);color:var(--mut);margin-top:-10px}
+.btn-volver:hover{border-color:var(--txt);color:var(--txt)}
+
+/* ÉXITO */
+.success-icon{font-size:72px;text-align:center;margin:10px 0}
+.success-title{font-size:24px;font-weight:900;text-align:center;color:var(--grn)}
+.success-sub{font-size:14px;color:var(--mut);text-align:center;line-height:1.6}
+.success-detail{background:var(--sf2);border-radius:10px;padding:16px;font-size:13px;color:var(--mut);text-align:center;line-height:1.8}
+.success-detail strong{color:var(--txt)}
+.btn-nuevo{background:var(--acc);color:#fff;margin-top:8px}
+.btn-nuevo:hover{background:#2563eb}
+
+/* ERROR */
+.error-msg{background:rgba(239,68,68,.1);border:1px solid var(--red);border-radius:8px;padding:12px;font-size:13px;color:var(--red);text-align:center;display:none}
+
+/* WAITING */
+.waiting{display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;color:var(--orn)}
+.spinner{width:20px;height:20px;border:2px solid var(--br);border-top-color:var(--orn);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TC field */
+.tc-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tc-row.hide{display:none}
+</style>
+</head>
+<body>
+
+<div class="logo">WORK <span>SHOP</span></div>
+<div class="sub">Panel de pago para clientes</div>
+
+<div class="panel">
+
+  <!-- PANTALLA 1: NOMBRE -->
+  <div class="screen active" id="screen1">
+    <div class="fld">
+      <label>👤 Tu nombre</label>
+      <input type="text" id="inputNombre" placeholder="Escribí tu nombre..." autocomplete="off" autocorrect="off">
+    </div>
+    <button class="btn-main btn-pagar" onclick="irScreen2()" id="btnSiguiente1">Continuar →</button>
+    <div class="error-msg" id="err1">Por favor ingresá tu nombre</div>
+  </div>
+
+  <!-- PANTALLA 2: MONEDA Y MONTO -->
+  <div class="screen" id="screen2">
+    <div style="font-size:14px;color:var(--mut)">Hola, <strong id="labelNombre" style="color:var(--txt)"></strong> 👋</div>
+
+    <div class="fld">
+      <label>💰 ¿Con qué moneda pagás?</label>
+      <div class="mon-grid">
+        <button class="mon-btn" onclick="setMoneda('ARS')" id="monARS">
+          <span class="ic">💵</span>
+          <span>Pesos</span>
+          <span style="font-size:10px;opacity:.7">ARS</span>
+        </button>
+        <button class="mon-btn" onclick="setMoneda('USD')" id="monUSD">
+          <span class="ic">💵</span>
+          <span>Dólares</span>
+          <span style="font-size:10px;opacity:.7">USD</span>
+        </button>
+        <button class="mon-btn" onclick="setMoneda('USDT')" id="monUSDT">
+          <span class="ic">⚡</span>
+          <span>USDT</span>
+          <span style="font-size:10px;opacity:.7">Digital</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="tc-row hide" id="tcRow">
+      <div class="fld">
+        <label>📈 Tipo de cambio</label>
+        <input type="number" id="inputTC" placeholder="1550" step="0.01" oninput="calcPreview()">
+      </div>
+      <div class="fld">
+        <label>💵 Equivalente ARS</label>
+        <input type="number" id="inputARS" placeholder="0" step="0.01" oninput="calcFromARS()" style="color:var(--ars)">
+      </div>
+    </div>
+
+    <div class="fld">
+      <label id="montoLabel">💰 Monto a pagar</label>
+      <input type="number" id="inputMonto" placeholder="0,00" step="0.01" oninput="calcPreview()">
+    </div>
+
+    <div class="preview" id="preview">
+      <div class="prev-label" id="prevLabel">Total a pagar</div>
+      <div class="prev-val" id="prevVal">-</div>
+    </div>
+
+    <button class="btn-main btn-pagar" onclick="irScreen3()" id="btnSiguiente2">Ver resumen →</button>
+    <button class="btn-main btn-volver" onclick="irScreen1()">← Volver</button>
+    <div class="error-msg" id="err2">Completá todos los campos</div>
+  </div>
+
+  <!-- PANTALLA 3: CONFIRMACIÓN -->
+  <div class="screen" id="screen3">
+    <div style="font-size:15px;font-weight:700;color:var(--mut);text-align:center">Confirmá tu pago</div>
+
+    <div class="resumen">
+      <div class="res-row">
+        <span class="res-lbl">Cliente</span>
+        <span class="res-val" id="resNombre">—</span>
+      </div>
+      <div class="res-row">
+        <span class="res-lbl">Moneda</span>
+        <span class="res-val" id="resMoneda">—</span>
+      </div>
+      <div class="res-row" id="resTCRow" style="display:none">
+        <span class="res-lbl">Tipo de cambio</span>
+        <span class="res-val" id="resTC">—</span>
+      </div>
+      <div class="res-row" style="border-top:1px solid var(--br);padding-top:10px;margin-top:4px">
+        <span style="font-size:15px;font-weight:800;color:var(--txt)">Total</span>
+        <span style="font-size:22px;font-weight:900" id="resTotal">—</span>
+      </div>
+      <div class="res-row" id="resARSRow" style="display:none">
+        <span class="res-lbl">Equivalente ARS</span>
+        <span class="res-val" id="resARS" style="color:var(--ars)">—</span>
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:var(--mut);text-align:center;line-height:1.6">
+      Al confirmar, tu pago queda registrado como <strong style="color:var(--orn)">pendiente</strong>. El equipo de Work Shop lo aprobará en instantes.
+    </div>
+
+    <button class="btn-main btn-pagar" onclick="enviarPago()" id="btnConfirmar">✓ Confirmar pago</button>
+    <button class="btn-main btn-volver" onclick="irScreen2()">← Modificar</button>
+    <div class="error-msg" id="err3">Error al enviar. Avisá al local.</div>
+
+    <div class="waiting" id="waiting" style="display:none">
+      <div class="spinner"></div>
+      Enviando pago...
+    </div>
+  </div>
+
+  <!-- PANTALLA 4: ÉXITO -->
+  <div class="screen" id="screen4">
+    <div class="success-icon">✅</div>
+    <div class="success-title">¡Pago enviado!</div>
+    <div class="success-sub">Tu pago fue registrado y está siendo revisado por el equipo de Work Shop.</div>
+    <div class="success-detail" id="successDetail"></div>
+    <button class="btn-main btn-nuevo" onclick="resetApp()">Nuevo pago</button>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://fabtiutuhftxxjkmlbyh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhYnRpdXR1aGZ0eHhqa21sYnloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjIxODYsImV4cCI6MjA5ODkzODE4Nn0.a18cu5Vm_X_wkZn2nnopu6etcmwNuCJ7XokINdTniAA';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let monedaActual = null;
+let nombre = '';
+
+function showScreen(n){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen'+n).classList.add('active');
+}
+
+function irScreen1(){ showScreen(1); }
+
+function irScreen2(){
+  nombre = document.getElementById('inputNombre').value.trim();
+  if(!nombre){ show('err1'); return; }
+  hide('err1');
+  document.getElementById('labelNombre').textContent = nombre;
+  showScreen(2);
+}
+
+function irScreen3(){
+  const monto = parseFloat(document.getElementById('inputMonto').value)||0;
+  const tc = parseFloat(document.getElementById('inputTC').value)||0;
+  if(!monedaActual || monto <= 0){ show('err2'); return; }
+  if((monedaActual==='USD'||monedaActual==='USDT') && tc <= 0){ show('err2'); return; }
+  hide('err2');
+
+  document.getElementById('resNombre').textContent = nombre;
+  const monLabels = {ARS:'Pesos (ARS)', USD:'Dólares (USD)', USDT:'USDT Digital'};
+  document.getElementById('resMoneda').textContent = monLabels[monedaActual];
+
+  const color = monedaActual==='ARS'?'var(--ars)':monedaActual==='USD'?'var(--usd)':'var(--usdt)';
+  const prefix = monedaActual==='ARS'?'$':monedaActual==='USD'?'u$':'⚡';
+  document.getElementById('resTotal').textContent = prefix + f2(monto);
+  document.getElementById('resTotal').style.color = color;
+
+  if(monedaActual !== 'ARS'){
+    document.getElementById('resTCRow').style.display='flex';
+    document.getElementById('resTC').textContent = '$'+tc.toLocaleString('es-AR');
+    document.getElementById('resARSRow').style.display='flex';
+    document.getElementById('resARS').textContent = '$'+f0(monto*tc);
+  } else {
+    document.getElementById('resTCRow').style.display='none';
+    document.getElementById('resARSRow').style.display='none';
+  }
+
+  showScreen(3);
+}
+
+function setMoneda(m){
+  monedaActual = m;
+  document.querySelectorAll('.mon-btn').forEach(b => b.className='mon-btn');
+  document.getElementById('mon'+m).classList.add('act-'+m.toLowerCase());
+  const tcRow = document.getElementById('tcRow');
+  tcRow.className = (m==='ARS') ? 'tc-row hide' : 'tc-row';
+  const labels = {ARS:'💵 Monto en Pesos', USD:'💵 Monto en Dólares', USDT:'⚡ Monto en USDT'};
+  document.getElementById('montoLabel').textContent = labels[m];
+  document.getElementById('inputMonto').value='';
+  document.getElementById('inputARS').value='';
+  calcPreview();
+}
+
+function calcPreview(){
+  const monto = parseFloat(document.getElementById('inputMonto').value)||0;
+  const tc = parseFloat(document.getElementById('inputTC').value)||0;
+  const prev = document.getElementById('preview');
+  const prevVal = document.getElementById('prevVal');
+  const prevLabel = document.getElementById('prevLabel');
+
+  if(!monto || !monedaActual){ prev.style.display='none'; return; }
+
+  prev.style.display='block';
+  if(monedaActual==='ARS'){
+    prevVal.textContent = '$'+f0(monto);
+    prevVal.style.color = 'var(--ars)';
+    prevLabel.textContent = 'Total en Pesos';
+    if(document.getElementById('inputARS')) document.getElementById('inputARS').value='';
+  } else {
+    const prefix = monedaActual==='USD'?'u$':'⚡';
+    const color = monedaActual==='USD'?'var(--usd)':'var(--usdt)';
+    prevVal.textContent = prefix+f2(monto)+(tc>0?' = $'+f0(monto*tc):'');
+    prevVal.style.color = color;
+    prevLabel.textContent = 'Total a pagar';
+    if(tc>0 && document.getElementById('inputARS')) document.getElementById('inputARS').value=(monto*tc).toFixed(2);
+  }
+}
+
+function calcFromARS(){
+  const ars = parseFloat(document.getElementById('inputARS').value)||0;
+  const tc = parseFloat(document.getElementById('inputTC').value)||0;
+  if(ars > 0 && tc > 0 && monedaActual !== 'ARS'){
+    document.getElementById('inputMonto').value = (ars/tc).toFixed(4);
+    calcPreview();
+  }
+}
+
+async function enviarPago(){
+  const monto = parseFloat(document.getElementById('inputMonto').value)||0;
+  const tc = parseFloat(document.getElementById('inputTC').value)||1;
+  const ahora = new Date();
+  const fecha = ahora.getFullYear()+'-'+String(ahora.getMonth()+1).padStart(2,'0')+'-'+String(ahora.getDate()).padStart(2,'0');
+  const hora = ahora.toTimeString().slice(0,5);
+
+  let iA=0, eA=0, iU=0, eU=0;
+  if(monedaActual==='ARS'){ iA=monto; }
+  else if(monedaActual==='USD'){ iU=monto; }
+  else { iU=monto; } // USDT tratado como USD por ahora
+
+  hide('err3');
+  show('waiting');
+  document.getElementById('btnConfirmar').disabled=true;
+
+  try {
+    const {error} = await sb.from('movimientos').insert({
+      id: Date.now(),
+      fecha,
+      hora,
+      tipo: 'COBRO',
+      descripcion: nombre,
+      cotiz: tc,
+      monto,
+      moneda: monedaActual,
+      ing_ars: iA,
+      egr_ars: eA,
+      saldo_ars: 0,
+      ing_usd: iU,
+      egr_usd: eU,
+      saldo_usd: 0,
+      operadora: 'CLIENTE',
+      notas: 'Ingresado por cliente desde tablet',
+      verificado: false,
+      estado: 'PENDIENTE'
+    });
+
+    if(error) throw error;
+
+    hide('waiting');
+    const prefix = monedaActual==='ARS'?'$':monedaActual==='USD'?'u$':'⚡';
+    document.getElementById('successDetail').innerHTML =
+      '<strong>'+nombre+'</strong><br>'+
+      prefix+f2(monto)+' '+monedaActual+
+      (monedaActual!=='ARS'?' (≈ $'+f0(monto*tc)+')':'')+
+      '<br>'+fecha+' · '+hora+'<br>'+
+      '<span style="color:var(--orn);font-weight:700">⏳ Pendiente de aprobación</span>';
+    showScreen(4);
+
+  } catch(e){
+    hide('waiting');
+    document.getElementById('btnConfirmar').disabled=false;
+    show('err3');
+    console.error(e);
+  }
+}
+
+function resetApp(){
+  nombre=''; monedaActual=null;
+  document.getElementById('inputNombre').value='';
+  document.getElementById('inputMonto').value='';
+  document.getElementById('inputTC').value='';
+  document.getElementById('inputARS').value='';
+  document.querySelectorAll('.mon-btn').forEach(b=>b.className='mon-btn');
+  document.getElementById('preview').style.display='none';
+  showScreen(1);
+}
+
+function show(id){ document.getElementById(id).style.display='block'; }
+function hide(id){ document.getElementById(id).style.display='none'; }
+function f0(n){ return (parseFloat(n)||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function f2(n){ return (parseFloat(n)||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:4}); }
+
+// Enter key navigation
+document.getElementById('inputNombre').addEventListener('keypress', e => { if(e.key==='Enter') irScreen2(); });
+</script>
+</body>
+</html>
