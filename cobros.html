@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0061)file:///Users/matiasfrancois/Downloads/cobros_clientes_1.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Work Shop · Pago</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./cobros_files/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -113,17 +112,17 @@ input::placeholder{color:var(--mut)}
     <div class="fld">
       <label>💰 ¿Con qué moneda pagás?</label>
       <div class="mon-grid">
-        <button class="mon-btn" onclick="setMoneda('ARS')" id="monARS">
+        <button class="mon-btn" onclick="setMoneda(&#39;ARS&#39;)" id="monARS">
           <span class="ic">💵</span>
           <span>Pesos</span>
           <span style="font-size:10px;opacity:.7">ARS</span>
         </button>
-        <button class="mon-btn" onclick="setMoneda('USD')" id="monUSD">
+        <button class="mon-btn" onclick="setMoneda(&#39;USD&#39;)" id="monUSD">
           <span class="ic">💵</span>
           <span>Dólares</span>
           <span style="font-size:10px;opacity:.7">USD</span>
         </button>
-        <button class="mon-btn" onclick="setMoneda('USDT')" id="monUSDT">
+        <button class="mon-btn" onclick="setMoneda(&#39;USDT&#39;)" id="monUSDT">
           <span class="ic">⚡</span>
           <span>USDT</span>
           <span style="font-size:10px;opacity:.7">Digital</span>
@@ -133,12 +132,12 @@ input::placeholder{color:var(--mut)}
 
     <div class="tc-row hide" id="tcRow">
       <div class="fld">
-        <label>📈 Tipo de cambio</label>
+        <label>📈 Tipo de cambio ($/USD)</label>
         <input type="number" id="inputTC" placeholder="1550" step="0.01" oninput="calcPreview()">
       </div>
       <div class="fld">
-        <label>💵 Equivalente ARS</label>
-        <input type="number" id="inputARS" placeholder="0" step="0.01" oninput="calcFromARS()" style="color:var(--ars)">
+        <label id="arsEquivLabel">💵 Equivalente USD</label>
+        <input type="number" id="inputARS" placeholder="0,00" step="0.0001" oninput="calcFromARS()" style="color:var(--usd)">
       </div>
     </div>
 
@@ -236,7 +235,8 @@ function irScreen3(){
   const monto = parseFloat(document.getElementById('inputMonto').value)||0;
   const tc = parseFloat(document.getElementById('inputTC').value)||0;
   if(!monedaActual || monto <= 0){ show('err2'); return; }
-  if((monedaActual==='USD'||monedaActual==='USDT') && tc <= 0){ show('err2'); return; }
+  // TC requerido solo para ARS
+  if(monedaActual==='ARS' && tc <= 0){ show('err2'); return; }
   hide('err2');
 
   document.getElementById('resNombre').textContent = nombre;
@@ -248,12 +248,17 @@ function irScreen3(){
   document.getElementById('resTotal').textContent = prefix + f2(monto);
   document.getElementById('resTotal').style.color = color;
 
-  if(monedaActual !== 'ARS'){
+  if(monedaActual === 'ARS'){
+    // Pesos: mostrar TC y equivalente USD
+    const usdEquiv = tc > 0 ? monto/tc : 0;
     document.getElementById('resTCRow').style.display='flex';
-    document.getElementById('resTC').textContent = '$'+tc.toLocaleString('es-AR');
+    document.getElementById('resTC').textContent = '$'+tc.toLocaleString('es-AR')+' por USD';
     document.getElementById('resARSRow').style.display='flex';
-    document.getElementById('resARS').textContent = '$'+f0(monto*tc);
+    document.getElementById('resARS').textContent = 'u$'+f2(usdEquiv);
+    document.getElementById('resARSRow').querySelector('.res-lbl').textContent='Equivalente USD';
+    document.getElementById('resARS').style.color='var(--usd)';
   } else {
+    // USD / USDT: no necesitan TC
     document.getElementById('resTCRow').style.display='none';
     document.getElementById('resARSRow').style.display='none';
   }
@@ -265,12 +270,23 @@ function setMoneda(m){
   monedaActual = m;
   document.querySelectorAll('.mon-btn').forEach(b => b.className='mon-btn');
   document.getElementById('mon'+m).classList.add('act-'+m.toLowerCase());
+
+  // TC solo para ARS (pesos → necesita cotización para calcular USD equivalente)
+  // USD y USDT no necesitan TC — son divisas directas
   const tcRow = document.getElementById('tcRow');
-  tcRow.className = (m==='ARS') ? 'tc-row hide' : 'tc-row';
+  tcRow.className = (m==='ARS') ? 'tc-row' : 'tc-row hide';
+
+  // Actualizar labels
   const labels = {ARS:'💵 Monto en Pesos', USD:'💵 Monto en Dólares', USDT:'⚡ Monto en USDT'};
   document.getElementById('montoLabel').textContent = labels[m];
+
+  // Actualizar label del campo de equivalente
+  const arsLabel = document.getElementById('arsEquivLabel');
+  if(arsLabel) arsLabel.textContent = 'Equivalente USD';
+
   document.getElementById('inputMonto').value='';
   document.getElementById('inputARS').value='';
+  document.getElementById('preview').style.display='none';
   calcPreview();
 }
 
@@ -284,26 +300,38 @@ function calcPreview(){
   if(!monto || !monedaActual){ prev.style.display='none'; return; }
 
   prev.style.display='block';
+
   if(monedaActual==='ARS'){
+    // Pesos: mostrar el monto en pesos y el equivalente en USD si tiene TC
+    const usdEquiv = tc > 0 ? monto/tc : 0;
     prevVal.textContent = '$'+f0(monto);
     prevVal.style.color = 'var(--ars)';
-    prevLabel.textContent = 'Total en Pesos';
-    if(document.getElementById('inputARS')) document.getElementById('inputARS').value='';
-  } else {
-    const prefix = monedaActual==='USD'?'u$':'⚡';
-    const color = monedaActual==='USD'?'var(--usd)':'var(--usdt)';
-    prevVal.textContent = prefix+f2(monto)+(tc>0?' = $'+f0(monto*tc):'');
-    prevVal.style.color = color;
-    prevLabel.textContent = 'Total a pagar';
-    if(tc>0 && document.getElementById('inputARS')) document.getElementById('inputARS').value=(monto*tc).toFixed(2);
+    prevLabel.textContent = 'Total en Pesos'+(usdEquiv>0?' ≈ u$'+f2(usdEquiv):'');
+    // Actualizar campo equivalente USD
+    const inputARS = document.getElementById('inputARS');
+    if(inputARS && tc > 0) inputARS.value = usdEquiv.toFixed(4);
+
+  } else if(monedaActual==='USD'){
+    // Dólares: mostrar directamente, sin TC
+    prevVal.textContent = 'u$'+f2(monto);
+    prevVal.style.color = 'var(--usd)';
+    prevLabel.textContent = 'Total en Dólares';
+
+  } else if(monedaActual==='USDT'){
+    // USDT: mostrar directamente, sin TC
+    prevVal.textContent = '⚡'+f2(monto)+' USDT';
+    prevVal.style.color = 'var(--usdt)';
+    prevLabel.textContent = 'Total en USDT';
   }
 }
 
 function calcFromARS(){
-  const ars = parseFloat(document.getElementById('inputARS').value)||0;
+  // inputARS ahora es el equivalente en USD cuando monedaActual = ARS
+  // Si el usuario escribe el USD equivalente, calculamos los pesos
+  const usd = parseFloat(document.getElementById('inputARS').value)||0;
   const tc = parseFloat(document.getElementById('inputTC').value)||0;
-  if(ars > 0 && tc > 0 && monedaActual !== 'ARS'){
-    document.getElementById('inputMonto').value = (ars/tc).toFixed(4);
+  if(usd > 0 && tc > 0 && monedaActual === 'ARS'){
+    document.getElementById('inputMonto').value = (usd * tc).toFixed(2);
     calcPreview();
   }
 }
@@ -316,9 +344,14 @@ async function enviarPago(){
   const hora = ahora.toTimeString().slice(0,5);
 
   let iA=0, eA=0, iU=0, eU=0;
-  if(monedaActual==='ARS'){ iA=monto; }
-  else if(monedaActual==='USD'){ iU=monto; }
-  else { iU=monto; } // USDT tratado como USD por ahora
+  if(monedaActual==='ARS'){
+    iA = monto;           // ingresa en pesos
+    iU = tc>0 ? monto/tc : 0; // equivalente USD
+  } else if(monedaActual==='USD'){
+    iU = monto;           // ingresa en dólares directos
+  } else {
+    iU = monto;           // USDT — ingresa como USD digital
+  }
 
   hide('err3');
   show('waiting');
@@ -350,10 +383,12 @@ async function enviarPago(){
 
     hide('waiting');
     const prefix = monedaActual==='ARS'?'$':monedaActual==='USD'?'u$':'⚡';
+    const extraInfo = monedaActual==='ARS' && tc>0
+      ? ' (≈ u$'+f2(monto/tc)+' USD)'
+      : '';
     document.getElementById('successDetail').innerHTML =
       '<strong>'+nombre+'</strong><br>'+
-      prefix+f2(monto)+' '+monedaActual+
-      (monedaActual!=='ARS'?' (≈ $'+f0(monto*tc)+')':'')+
+      prefix+f2(monto)+' '+monedaActual+extraInfo+
       '<br>'+fecha+' · '+hora+'<br>'+
       '<span style="color:var(--orn);font-weight:700">⏳ Pendiente de aprobación</span>';
     showScreen(4);
@@ -385,5 +420,6 @@ function f2(n){ return (parseFloat(n)||0).toLocaleString('es-AR',{minimumFractio
 // Enter key navigation
 document.getElementById('inputNombre').addEventListener('keypress', e => { if(e.key==='Enter') irScreen2(); });
 </script>
-</body>
-</html>
+
+
+</body></html>
