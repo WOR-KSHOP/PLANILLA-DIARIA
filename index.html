@@ -203,6 +203,14 @@ tbody td{padding:6px 8px;vertical-align:middle}
 .arqueo-dif-warn{background:rgba(245,158,11,.1);border:1px solid var(--orn)}
 .arqueo-dif-lbl{font-size:12px;font-weight:700}
 .arqueo-dif-val{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums}
+
+/* TABS */
+.tab-nav{display:flex;align-items:center;gap:2px;background:var(--sf);border-bottom:1px solid var(--br);padding:0 20px}
+.tab-btn{padding:11px 18px;font-size:12px;font-weight:800;color:var(--mut);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .14s;white-space:nowrap}
+.tab-btn:hover{color:var(--txt)}
+.tab-btn.active{color:var(--acc);border-bottom-color:var(--acc)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
 </style>
 </head>
 <body>
@@ -214,7 +222,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
 </div>
 
 <header>
-  <div class="logo">WORK <span>SHOP</span> · Caja</div>
+  <div class="logo">WORK <span>SHOP</span></div>
   <div class="hdr-r">
     <div class="user-sel">
       <span>Usuario:</span>
@@ -227,7 +235,13 @@ tbody td{padding:6px 8px;vertical-align:middle}
   </div>
 </header>
 
-<div class="date-nav">
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('caja')" id="tab-caja">💰 Caja Diaria</button>
+  <button class="tab-btn" onclick="switchTab('neo')" id="tab-neo">🏦 Neo Capital</button>
+  <button class="tab-btn" onclick="switchTab('usdt')" id="tab-usdt">⚡ USDT</button>
+</div>
+
+<div id="pane-caja" class="tab-pane active"><div class="date-nav">
   <button class="btn-nav active" id="btnHoyNav" onclick="irHoy()">Hoy</button>
   <button class="btn-nav" onclick="navDia(-1)">← Anterior</button>
   <button class="btn-nav" onclick="navDia(1)">Siguiente →</button>
@@ -584,6 +598,18 @@ tbody td{padding:6px 8px;vertical-align:middle}
 
     </div>
   </div>
+</div>
+
+</div><!-- end pane-caja -->
+
+<!-- PANE NEO CAPITAL -->
+<div id="pane-neo" class="tab-pane">
+  <div id="neo-app"></div>
+</div>
+
+<!-- PANE USDT -->
+<div id="pane-usdt" class="tab-pane">
+  <div id="usdt-app"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1407,6 +1433,420 @@ function toast(msg,w,e){
   t.className='toast'+(w?' w':e?' e':'')+' show';
   setTimeout(()=>t.className='toast'+(w?' w':e?' e':''),2800);
 }
+
+// ===== TAB SWITCHING =====
+let currentTab = 'caja';
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('pane-'+tab).classList.add('active');
+  if(tab === 'neo') renderNeo();
+  if(tab === 'usdt') renderUSDT();
+}
+
+// ===== NEO CAPITAL =====
+let neoMovs = [];
+let neoEditIdx = null;
+
+async function loadNeo(){
+  const {data, error} = await sb.from('neo_capital').select('*').order('fecha', {ascending:false}).order('id', {ascending:false});
+  if(!error) neoMovs = data || [];
+}
+
+async function renderNeo(){
+  await loadNeo();
+  const mes = new Date().toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+  const totalARS = neoMovs.reduce((s,m) => s + (parseFloat(m.pesos)||0), 0);
+  const totalUSD = neoMovs.reduce((s,m) => s + (parseFloat(m.usd)||0), 0);
+
+  const rows = neoMovs.map((m,i) => {
+    const d = new Date(m.fecha+'T00:00:00');
+    const fLabel = d.toLocaleDateString('es-AR',{day:'numeric',month:'short'});
+    return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)">'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--mut)">'+fLabel+'</td>'+
+      '<td style="padding:7px 10px;font-size:12px;font-weight:700">'+m.cliente+'</td>'+
+      '<td style="padding:7px 10px;font-size:12px;color:var(--ars);font-weight:700">$'+f0(parseFloat(m.pesos)||0)+'</td>'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--mut)">$'+( parseFloat(m.tc)||0).toLocaleString('es-AR')+'</td>'+
+      '<td style="padding:7px 10px;font-size:13px;font-weight:900;color:var(--usd)">u$'+f2(parseFloat(m.usd)||0)+'</td>'+
+      '<td style="padding:7px 10px;font-size:10px;color:var(--mut)">'+( m.banco||'—')+'</td>'+
+      '<td style="padding:7px 10px;font-size:10px;color:var(--mut)">'+( m.emisor||'—')+'</td>'+
+      '<td style="padding:7px 10px;font-size:10px;color:var(--mut)">'+( m.fecha_cupon||'—')+' '+(m.hora_cupon||'')+'</td>'+
+      '<td style="padding:7px 10px"><div style="display:flex;gap:4px">'+
+        '<button onclick="neoEditar('+i+')" style="padding:3px 8px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer">✏️</button>'+
+        '<button onclick="neoEliminar('+i+')" style="padding:3px 8px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer">🗑</button>'+
+      '</div></td>'+
+    '</tr>';
+  }).join('');
+
+  document.getElementById('neo-app').innerHTML = `
+    <div style="padding:16px 20px;border-bottom:1px solid var(--br);background:var(--sf);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:18px;font-weight:900">🏦 Neo Capital — Transferencias</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:2px">Conversión de Pesos a USD</div>
+      </div>
+      <div style="display:flex;gap:12px">
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 16px;border-left:3px solid var(--ars)">
+          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Total Pesos</div>
+          <div style="font-size:16px;font-weight:900;color:var(--ars)">$`+f0(totalARS)+`</div>
+        </div>
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 16px;border-left:3px solid var(--usd)">
+          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Total USD</div>
+          <div style="font-size:16px;font-weight:900;color:var(--usd)">u$`+f2(totalUSD)+`</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 160px)">
+
+      <!-- FORMULARIO -->
+      <div style="background:var(--sf);border-right:1px solid var(--br);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;padding-bottom:8px;border-bottom:1px solid var(--br)" id="neoFormTitle">Nueva transferencia</div>
+
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Fecha</label>
+          <input type="date" id="neoFecha" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:var(--fnt)">
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Cliente / Emisor</label>
+          <input type="text" id="neoCliente" placeholder="Nombre del cliente" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:var(--fnt)">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Pesos enviados</label>
+            <input type="number" id="neoPesos" placeholder="0" step="0.01" oninput="calcNeo()" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--ars);font-size:13px;font-weight:800;font-family:var(--fnt)">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Tipo de cambio</label>
+            <input type="number" id="neoTC" placeholder="1550" step="0.01" oninput="calcNeo()" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:var(--fnt)">
+          </div>
+        </div>
+
+        <div style="background:var(--sf2);border:1px solid var(--br);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;color:var(--mut);margin-bottom:4px;font-weight:700">USD A RECIBIR</div>
+          <div style="font-size:28px;font-weight:900;color:var(--usd)" id="neoResultUSD">u$0,00</div>
+        </div>
+
+        <div style="border-top:1px solid var(--br);padding-top:12px">
+          <div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">📄 Datos del cupón bancario</div>
+
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Banco</label>
+              <input type="text" id="neoBanco" placeholder="Ej: Galicia, Santander..." style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:var(--fnt)">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Fecha cupón</label>
+                <input type="date" id="neoFechaCupon" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--txt);font-size:12px;font-family:var(--fnt)">
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Hora cupón</label>
+                <input type="time" id="neoHoraCupon" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--txt);font-size:12px;font-family:var(--fnt)">
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Emisor de la transferencia</label>
+              <input type="text" id="neoEmisor" placeholder="Nombre del titular" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:var(--fnt)">
+            </div>
+          </div>
+        </div>
+
+        <button onclick="neoRegistrar()" id="neoBtnReg" style="padding:11px;border-radius:8px;border:none;background:#1F4E79;color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all .14s" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#1F4E79'">+ Registrar transferencia</button>
+        <button onclick="neoCancelEdit()" id="neoBtnCancel" style="display:none;padding:9px;border-radius:8px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:12px;font-weight:700;cursor:pointer">✕ Cancelar edición</button>
+      </div>
+
+      <!-- TABLA -->
+      <div style="overflow:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+          <thead>
+            <tr style="background:var(--sf)">
+              <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Fecha</th>
+              <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Cliente</th>
+              <th style="padding:8px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Pesos</th>
+              <th style="padding:8px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">TC</th>
+              <th style="padding:8px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">USD</th>
+              <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Banco</th>
+              <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Emisor</th>
+              <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Cupón</th>
+              <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Acc.</th>
+            </tr>
+          </thead>
+          <tbody>`+rows+`</tbody>
+        </table>
+        `+(neoMovs.length===0?'<div style="padding:40px;text-align:center;color:var(--mut)"><div style="font-size:32px;margin-bottom:8px">🏦</div>Sin transferencias registradas</div>':'')+`
+      </div>
+    </div>
+  `;
+
+  // Set today's date by default
+  const hoy = new Date();
+  const fechaHoy = hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0')+'-'+String(hoy.getDate()).padStart(2,'0');
+  if(document.getElementById('neoFecha')) document.getElementById('neoFecha').value = fechaHoy;
+  if(document.getElementById('neoFechaCupon')) document.getElementById('neoFechaCupon').value = fechaHoy;
+  if(document.getElementById('neoHoraCupon')) document.getElementById('neoHoraCupon').value = hoy.toTimeString().slice(0,5);
+}
+
+function calcNeo(){
+  const pesos = parseFloat(document.getElementById('neoPesos')?.value)||0;
+  const tc = parseFloat(document.getElementById('neoTC')?.value)||0;
+  const usd = tc > 0 ? pesos/tc : 0;
+  const el = document.getElementById('neoResultUSD');
+  if(el) el.textContent = 'u$'+f2(usd);
+}
+
+async function neoRegistrar(){
+  const fecha = document.getElementById('neoFecha')?.value;
+  const cliente = document.getElementById('neoCliente')?.value.trim();
+  const pesos = parseFloat(document.getElementById('neoPesos')?.value)||0;
+  const tc = parseFloat(document.getElementById('neoTC')?.value)||0;
+  const banco = document.getElementById('neoBanco')?.value.trim();
+  const fechaCupon = document.getElementById('neoFechaCupon')?.value;
+  const horaCupon = document.getElementById('neoHoraCupon')?.value;
+  const emisor = document.getElementById('neoEmisor')?.value.trim();
+
+  if(!fecha) return toast('Seleccioná una fecha',1);
+  if(!cliente) return toast('Ingresá el cliente',1);
+  if(!pesos || pesos<=0) return toast('Ingresá los pesos',1);
+  if(!tc || tc<=0) return toast('Ingresá el tipo de cambio',1);
+
+  const usd = pesos/tc;
+
+  const record = {
+    fecha, cliente, pesos, tc, usd,
+    banco: banco||null,
+    fecha_cupon: fechaCupon||null,
+    hora_cupon: horaCupon||null,
+    emisor: emisor||null,
+    operadora: op
+  };
+
+  if(neoEditIdx !== null){
+    const id = neoMovs[neoEditIdx].id;
+    const {error} = await sb.from('neo_capital').update(record).eq('id', id);
+    if(error){ toast('Error al actualizar',1,1); return; }
+    toast('✓ Transferencia actualizada');
+    neoCancelEdit();
+  } else {
+    const {error} = await sb.from('neo_capital').insert(record);
+    if(error){ toast('Error al guardar',1,1); return; }
+    toast('✓ Transferencia registrada');
+  }
+  renderNeo();
+}
+
+function neoEditar(i){
+  neoEditIdx = i;
+  const m = neoMovs[i];
+  document.getElementById('neoFecha').value = m.fecha||'';
+  document.getElementById('neoCliente').value = m.cliente||'';
+  document.getElementById('neoPesos').value = m.pesos||'';
+  document.getElementById('neoTC').value = m.tc||'';
+  document.getElementById('neoBanco').value = m.banco||'';
+  document.getElementById('neoFechaCupon').value = m.fecha_cupon||'';
+  document.getElementById('neoHoraCupon').value = m.hora_cupon||'';
+  document.getElementById('neoEmisor').value = m.emisor||'';
+  calcNeo();
+  document.getElementById('neoFormTitle').textContent = '✏️ Editando transferencia';
+  document.getElementById('neoBtnReg').textContent = '✓ Guardar cambios';
+  document.getElementById('neoBtnReg').style.background = 'var(--orn)';
+  document.getElementById('neoBtnCancel').style.display = 'block';
+}
+
+function neoCancelEdit(){
+  neoEditIdx = null;
+  document.getElementById('neoFormTitle').textContent = 'Nueva transferencia';
+  document.getElementById('neoBtnReg').textContent = '+ Registrar transferencia';
+  document.getElementById('neoBtnReg').style.background = '#1F4E79';
+  document.getElementById('neoBtnCancel').style.display = 'none';
+  renderNeo();
+}
+
+async function neoEliminar(i){
+  if(!confirm('¿Eliminar esta transferencia?')) return;
+  const id = neoMovs[i].id;
+  await sb.from('neo_capital').delete().eq('id', id);
+  toast('Eliminada');
+  renderNeo();
+}
+
+// ===== USDT =====
+let usdtMovs = [];
+
+async function renderUSDT(){
+  const {data, error} = await sb.from('usdt_movimientos').select('*').order('fecha', {ascending:false}).order('id', {ascending:false});
+  if(!error) usdtMovs = data||[];
+
+  const totalCompra = usdtMovs.filter(m=>m.tipo==='COMPRA').reduce((s,m)=>s+(parseFloat(m.usdt)||0),0);
+  const totalVenta = usdtMovs.filter(m=>m.tipo==='VENTA').reduce((s,m)=>s+(parseFloat(m.usdt)||0),0);
+  const saldoUSDT = totalCompra - totalVenta;
+
+  const rows = usdtMovs.map((m,i) => {
+    const d = new Date(m.fecha+'T00:00:00');
+    const fLabel = d.toLocaleDateString('es-AR',{day:'numeric',month:'short'});
+    const color = m.tipo==='COMPRA' ? 'var(--grn)' : 'var(--red)';
+    return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)">'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--mut)">'+fLabel+'</td>'+
+      '<td style="padding:7px 10px"><span style="padding:2px 7px;border-radius:4px;font-size:9px;font-weight:900;background:'+(m.tipo==='COMPRA'?'rgba(16,185,129,.12)':'rgba(239,68,68,.1)')+';color:'+color+'">'+m.tipo+'</span></td>'+
+      '<td style="padding:7px 10px;font-size:12px;font-weight:700">'+m.descripcion+'</td>'+
+      '<td style="padding:7px 10px;font-size:13px;font-weight:900;color:#a78bfa">⚡'+f2(parseFloat(m.usdt)||0)+' USDT</td>'+
+      '<td style="padding:7px 10px;font-size:12px;color:var(--ars)">$'+f0(parseFloat(m.pesos)||0)+'</td>'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--mut)">$'+(parseFloat(m.tc)||0).toLocaleString('es-AR')+'</td>'+
+      '<td style="padding:7px 10px;font-size:10px;color:var(--mut)">'+( m.operadora||'')+'</td>'+
+      '<td style="padding:7px 10px"><button onclick="usdtEliminar('+i+')" style="padding:3px 8px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer">🗑</button></td>'+
+    '</tr>';
+  }).join('');
+
+  document.getElementById('usdt-app').innerHTML = `
+    <div style="padding:16px 20px;border-bottom:1px solid var(--br);background:var(--sf);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:18px;font-weight:900">⚡ USDT — Dólar Digital</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:2px">Compras y ventas de USDT</div>
+      </div>
+      <div style="display:flex;gap:12px">
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 16px;border-left:3px solid var(--grn)">
+          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Comprado</div>
+          <div style="font-size:16px;font-weight:900;color:var(--grn)">⚡`+f2(totalCompra)+`</div>
+        </div>
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 16px;border-left:3px solid var(--red)">
+          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Vendido</div>
+          <div style="font-size:16px;font-weight:900;color:var(--red)">⚡`+f2(totalVenta)+`</div>
+        </div>
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 16px;border-left:3px solid #a78bfa">
+          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo USDT</div>
+          <div style="font-size:20px;font-weight:900;color:#a78bfa">⚡`+f2(saldoUSDT)+`</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 160px)">
+      <!-- FORM -->
+      <div style="background:var(--sf);border-right:1px solid var(--br);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px">
+        <div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;padding-bottom:8px;border-bottom:1px solid var(--br)">Nueva operación USDT</div>
+
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Tipo</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--br);border-radius:6px;overflow:hidden">
+            <button id="usdtBtnCompra" onclick="setUsdtTipo('COMPRA')" style="padding:9px;text-align:center;font-size:12px;font-weight:800;border:none;background:rgba(16,185,129,.12);color:var(--grn);cursor:pointer">▲ Compra</button>
+            <button id="usdtBtnVenta" onclick="setUsdtTipo('VENTA')" style="padding:9px;text-align:center;font-size:12px;font-weight:800;border:none;background:var(--sf2);color:var(--mut);cursor:pointer">▼ Venta</button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Fecha</label>
+          <input type="date" id="usdtFecha" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:var(--fnt)">
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">Descripción</label>
+          <input type="text" id="usdtDesc" placeholder="Ej: Compra Binance, Venta P2P..." style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:var(--fnt)">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">USDT</label>
+            <input type="number" id="usdtCantidad" placeholder="0.00" step="0.01" oninput="calcUSDT()" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:#a78bfa;font-size:13px;font-weight:800;font-family:var(--fnt)">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase">TC (ARS/USDT)</label>
+            <input type="number" id="usdtTC" placeholder="1550" step="0.01" oninput="calcUSDT()" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:8px 10px;color:var(--txt);font-size:13px;font-family:var(--fnt)">
+          </div>
+        </div>
+
+        <div style="background:var(--sf2);border:1px solid var(--br);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;color:var(--mut);margin-bottom:4px;font-weight:700">PESOS EQUIVALENTES</div>
+          <div style="font-size:24px;font-weight:900;color:var(--ars)" id="usdtResultPesos">$0,00</div>
+        </div>
+
+        <button onclick="usdtRegistrar()" style="padding:11px;border-radius:8px;border:none;background:#5b21b6;color:#fff;font-size:13px;font-weight:800;cursor:pointer">⚡ Registrar operación</button>
+      </div>
+
+      <!-- TABLA -->
+      <div style="overflow:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+          <thead>
+            <tr style="background:var(--sf)">
+              <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Fecha</th>
+              <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Tipo</th>
+              <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Descripción</th>
+              <th style="padding:8px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">USDT</th>
+              <th style="padding:8px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Pesos</th>
+              <th style="padding:8px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">TC</th>
+              <th style="padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Op.</th>
+              <th style="padding:8px 10px;position:sticky;top:0;border-bottom:1px solid var(--br)"></th>
+            </tr>
+          </thead>
+          <tbody>`+rows+`</tbody>
+        </table>
+        `+(usdtMovs.length===0?'<div style="padding:40px;text-align:center;color:var(--mut)"><div style="font-size:32px;margin-bottom:8px">⚡</div>Sin operaciones registradas</div>':'')+`
+      </div>
+    </div>
+  `;
+
+  const hoy2 = new Date();
+  const fechaHoy2 = hoy2.getFullYear()+'-'+String(hoy2.getMonth()+1).padStart(2,'0')+'-'+String(hoy2.getDate()).padStart(2,'0');
+  if(document.getElementById('usdtFecha')) document.getElementById('usdtFecha').value = fechaHoy2;
+  setUsdtTipo('COMPRA');
+}
+
+let usdtTipo = 'COMPRA';
+function setUsdtTipo(t){
+  usdtTipo = t;
+  const bc = document.getElementById('usdtBtnCompra');
+  const bv = document.getElementById('usdtBtnVenta');
+  if(!bc||!bv) return;
+  if(t==='COMPRA'){
+    bc.style.background='rgba(16,185,129,.12)'; bc.style.color='var(--grn)';
+    bv.style.background='var(--sf2)'; bv.style.color='var(--mut)';
+  } else {
+    bv.style.background='rgba(239,68,68,.1)'; bv.style.color='var(--red)';
+    bc.style.background='var(--sf2)'; bc.style.color='var(--mut)';
+  }
+}
+
+function calcUSDT(){
+  const usdt = parseFloat(document.getElementById('usdtCantidad')?.value)||0;
+  const tc = parseFloat(document.getElementById('usdtTC')?.value)||0;
+  const pesos = usdt * tc;
+  const el = document.getElementById('usdtResultPesos');
+  if(el) el.textContent = '$'+f0(pesos);
+}
+
+async function usdtRegistrar(){
+  const fecha = document.getElementById('usdtFecha')?.value;
+  const desc = document.getElementById('usdtDesc')?.value.trim();
+  const usdt = parseFloat(document.getElementById('usdtCantidad')?.value)||0;
+  const tc = parseFloat(document.getElementById('usdtTC')?.value)||0;
+
+  if(!fecha) return toast('Seleccioná una fecha',1);
+  if(!desc) return toast('Ingresá una descripción',1);
+  if(!usdt||usdt<=0) return toast('Ingresá la cantidad USDT',1);
+  if(!tc||tc<=0) return toast('Ingresá el tipo de cambio',1);
+
+  const {error} = await sb.from('usdt_movimientos').insert({
+    fecha, tipo: usdtTipo, descripcion: desc,
+    usdt, tc, pesos: usdt*tc, operadora: op
+  });
+
+  if(error){ toast('Error al guardar',1,1); console.error(error); return; }
+  toast('⚡ Operación USDT registrada');
+  document.getElementById('usdtDesc').value='';
+  document.getElementById('usdtCantidad').value='';
+  document.getElementById('usdtTC').value='';
+  document.getElementById('usdtResultPesos').textContent='$0,00';
+  renderUSDT();
+}
+
+async function usdtEliminar(i){
+  if(!confirm('¿Eliminar esta operación?')) return;
+  await sb.from('usdt_movimientos').delete().eq('id', usdtMovs[i].id);
+  toast('Eliminada');
+  renderUSDT();
+}
+
 </script>
 </body>
 </html>
