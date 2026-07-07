@@ -1206,8 +1206,16 @@ function generarTicket(tIA,tEA,tIU,tEU,verif){
   const tARS = parseFloat(document.getElementById('totalArqueoARS').textContent.replace('$','').replace(/\./g,'').replace(',','.')) || 0;
   const tUSDarq = parseFloat(document.getElementById('totalArqueoUSD').textContent.replace('u$','').replace(/\./g,'').replace(',','.')) || 0;
   const hasArqueo = document.getElementById('bARS100').value > 0 || document.getElementById('bUSD100').value > 0;
-  const arqueoLine = hasArqueo ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n💵 ARQUEO FÍSICO\n  Contado ARS: $\${f0(tARS)}\n  Diferencia ARS: \${sARS-tARS===0?'✓ Exacto':'$'+f0(Math.abs(sARS-tARS))+' '+(sARS-tARS>0?'FALTA':'SOBRA')}\n  Contado USD: u$\${f2(tUSDarq)}\n  Diferencia USD: \${sUSD-tUSDarq===0?'✓ Exacto':'u$'+f2(Math.abs(sUSD-tUSDarq))+' '+(sUSD-tUSDarq>0?'FALTA':'SOBRA')}` : '';
-  ticketTexto=`╔═══════════════════════╗\n║  CIERRE DE CAJA 📋     ║\n║  WORK SHOP              ║\n╚═══════════════════════╝\n\n📅 ${fecha[0].toUpperCase()+fecha.slice(1)}\n🕐 Generado: ${hora}\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n💵 CAJA ARS\n  Saldo inicial:  $${f0(saldoIniARS)}\n  ▲ Ingresos:   +$${f0(tIA)}\n  ▼ Egresos:    -$${f0(tEA)}\n  Saldo final:    $${f0(sARS)}\n\n💵 CAJA USD\n  Saldo inicial:  u$${f2(saldoIniUSD)}\n  ▲ Ingresos:   +u$${f2(tIU)}\n  ▼ Egresos:    -u$${f2(tEU)}\n  Saldo final:    u$${f2(sUSD)}\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n📝 MOVIMIENTOS (${movs.length} | ✓${verif})${movsList}\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n_Work Shop · Sistema de Caja_\${arqueoLine}\`;
+  const difARSnum = sARS - tARS;
+  const difUSDnum = sUSD - tUSDarq;
+  const arqueoLine = hasArqueo ? (
+    '\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n💵 ARQUEO FÍSICO' +
+    '\n  Contado ARS: $' + f0(tARS) +
+    '\n  Diferencia ARS: ' + (difARSnum===0 ? '✓ Exacto' : '$'+f0(Math.abs(difARSnum))+' '+(difARSnum>0?'FALTA':'SOBRA')) +
+    '\n  Contado USD: u$' + f2(tUSDarq) +
+    '\n  Diferencia USD: ' + (difUSDnum===0 ? '✓ Exacto' : 'u$'+f2(Math.abs(difUSDnum))+' '+(difUSDnum>0?'FALTA':'SOBRA'))
+  ) : '';
+  ticketTexto = '╔═══════════════════════╗\n║  CIERRE DE CAJA 📋     ║\n║  WORK SHOP              ║\n╚═══════════════════════╝\n\n📅 '+fecha[0].toUpperCase()+fecha.slice(1)+'\n🕐 Generado: '+hora+'\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n💵 CAJA ARS\n  Saldo inicial:  $'+f0(saldoIniARS)+'\n  ▲ Ingresos:   +$'+f0(tIA)+'\n  ▼ Egresos:    -$'+f0(tEA)+'\n  Saldo final:    $'+f0(sARS)+'\n\n💵 CAJA USD\n  Saldo inicial:  u$'+f2(saldoIniUSD)+'\n  ▲ Ingresos:   +u$'+f2(tIU)+'\n  ▼ Egresos:    -u$'+f2(tEU)+'\n  Saldo final:    u$'+f2(sUSD)+'\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n📝 MOVIMIENTOS ('+movs.length+' | ✓'+verif+')'+movsList+'\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n_Work Shop · Sistema de Caja_'+arqueoLine;
   document.getElementById('ticketPreview').textContent=ticketTexto;
 }
 function copiarTicket(){ navigator.clipboard.writeText(ticketTexto).then(()=>toast('✓ Copiado')); }
@@ -1216,7 +1224,7 @@ function compartirWA(){ window.open('https://api.whatsapp.com/send?text='+encode
 // ===== CERRAR DÍA =====
 async function cerrarDia(){
   if(modoHistorial) return;
-  if(!confirm(`¿Cerrar el día?\n\nSaldo final:\n  ARS: $${f0(sARS)}\n  USD: u$${f2(sUSD)}\n\nPasa como saldo inicial de mañana.`)) return;
+  if(!confirm('¿Cerrar el día? Saldo final: ARS $'+f0(sARS)+' / USD u$'+f2(sUSD)+'. Pasa como saldo inicial de mañana.')) return;
   const manana=new Date(); manana.setDate(manana.getDate()+1);
   // Guardar saldo de mañana en Supabase como saldo inicial
   await sb.from('saldos_iniciales').upsert({
@@ -1235,7 +1243,7 @@ async function cerrarDia(){
   diaCerrado = true;
   actualizarEstadoCierre();
   closeCierre();
-  toast(`✓ Día cerrado · Mañana arranca $${f0(sARS)} / u$${f2(sUSD)}`);
+  toast('✓ Día cerrado · Mañana arranca $'+f0(sARS)+' / u$'+f2(sUSD));
   console.log('Saldo guardado para mañana:', fmtFecha(manana), sARS, sUSD);
 }
 
@@ -1243,11 +1251,11 @@ async function cerrarDia(){
 function exportCSV(){
   if(!movs.length) return toast('Sin movimientos',1);
   const h=['#','Fecha','Hora','Tipo','Descripcion','Cotizacion','Monto','Moneda','Ing ARS','Egr ARS','Saldo ARS','Ing USD','Egr USD','Saldo USD','Op','Notas','Verificado'];
-  const rows=movs.map((m,i)=>[i+1,m.fecha,m.hora,m.tipo,`"${m.desc}"`,m.cotiz,m.monto,m.moneda,m.iA.toFixed(2),m.eA.toFixed(2),m.sARS.toFixed(2),m.iU.toFixed(4),m.eU.toFixed(4),m.sUSD.toFixed(4),m.op,`"${m.notas}"`,m.ok?'SI':'NO']);
+  const rows=movs.map((m,i)=>[i+1,m.fecha,m.hora,m.tipo,'"'+m.desc+'"',m.cotiz,m.monto,m.moneda,m.iA.toFixed(2),m.eA.toFixed(2),m.sARS.toFixed(2),m.iU.toFixed(4),m.eU.toFixed(4),m.sUSD.toFixed(4),m.op,'"'+m.notas+'"',m.ok?'SI':'NO']);
   const csv=[h,...rows].map(r=>r.join(',')).join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download=`caja_ws_${fmtFecha(fechaActual)}.csv`;
+  a.download='caja_ws_'+fmtFecha(fechaActual)+'.csv';
   a.click(); toast('✓ CSV exportado');
 }
 
