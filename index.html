@@ -251,6 +251,10 @@ tbody td{padding:6px 8px;vertical-align:middle}
   <button class="tab-btn active" onclick="switchTab('caja')" id="tab-caja">💰 Caja Diaria</button>
   <button class="tab-btn" onclick="switchTab('neo')" id="tab-neo">🏦 Neo Capital</button>
   <button class="tab-btn" onclick="switchTab('usdt')" id="tab-usdt">⚡ USDT</button>
+  <button class="tab-btn" onclick="switchTab('pendientes')" id="tab-pendientes" style="position:relative">
+    🔔 Pendientes
+    <span id="pendBadge" style="display:none;position:absolute;top:6px;right:6px;background:var(--red);color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:8px">0</span>
+  </button>
 </div>
 
 <div id="pane-caja" class="tab-pane active"><div class="date-nav">
@@ -631,6 +635,10 @@ tbody td{padding:6px 8px;vertical-align:middle}
 </div>
 
 <!-- PANE USDT -->
+<div id="pane-pendientes" class="tab-pane">
+  <div id="pendientes-app"></div>
+</div>
+
 <div id="pane-usdt" class="tab-pane">
   <div id="usdt-app"></div>
 </div>
@@ -1467,6 +1475,7 @@ function switchTab(tab){
   document.getElementById('pane-'+tab).classList.add('active');
   if(tab === 'neo') renderNeo();
   if(tab === 'usdt') renderUSDT();
+  if(tab === 'pendientes') renderPendientes();
 }
 
 // ===== NEO CAPITAL =====
@@ -2199,6 +2208,154 @@ function limpiarBuscadorUSDT(){
   document.getElementById('usdtSearchCount').textContent='';
   renderUSDT();
 }
+
+
+// ===== PENDIENTES (pagos de clientes) =====
+let pendientesData = [];
+let pendientesSubscription = null;
+
+async function initPendientes(){
+  // Suscribir a movimientos con estado PENDIENTE en tiempo real
+  pendientesSubscription = sb.channel('pendientes-channel')
+    .on('postgres_changes',{
+      event:'INSERT', schema:'public', table:'movimientos',
+      filter:"estado=eq.PENDIENTE"
+    }, () => {
+      checkPendientesCount();
+      if(currentTab==='pendientes') renderPendientes();
+    })
+    .subscribe();
+  checkPendientesCount();
+}
+
+async function checkPendientesCount(){
+  const {data} = await sb.from('movimientos').select('id').eq('estado','PENDIENTE');
+  const n = (data||[]).length;
+  const badge = document.getElementById('pendBadge');
+  if(badge){
+    badge.textContent = n;
+    badge.style.display = n > 0 ? 'inline' : 'none';
+  }
+}
+
+async function renderPendientes(){
+  const {data, error} = await sb.from('movimientos')
+    .select('*').eq('estado','PENDIENTE')
+    .order('id', {ascending:true});
+  pendientesData = data||[];
+
+  const n = pendientesData.length;
+  const badge = document.getElementById('pendBadge');
+  if(badge){ badge.textContent=n; badge.style.display=n>0?'inline':'none'; }
+
+  if(!n){
+    document.getElementById('pendientes-app').innerHTML = `
+      <div style="padding:20px;border-bottom:1px solid var(--br);background:var(--sf)">
+        <div style="font-size:18px;font-weight:900">🔔 Pagos pendientes de aprobación</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:3px">Ingresados por clientes desde la tablet</div>
+      </div>
+      <div style="padding:60px;text-align:center;color:var(--mut)">
+        <div style="font-size:48px;margin-bottom:12px">✅</div>
+        <div style="font-size:16px;font-weight:700">Sin pagos pendientes</div>
+        <div style="font-size:13px;margin-top:6px">Cuando un cliente ingrese un pago, aparecerá aquí para que lo apruebes</div>
+      </div>`;
+    return;
+  }
+
+  const cards = pendientesData.map((m,i) => {
+    const monColor = m.moneda==='ARS'?'var(--ars)':m.moneda==='USD'?'var(--usd)':'var(--usdt)';
+    const monPrefix = m.moneda==='ARS'?'$':m.moneda==='USD'?'u$':'⚡';
+    const monto = parseFloat(m.monto)||0;
+    const tc = parseFloat(m.cotiz)||1;
+    const arsEq = m.moneda!=='ARS' ? '<div style="font-size:12px;color:var(--ars);margin-top:4px">≈ $'+f0(monto*tc)+' ARS</div>' : '';
+    const hace = tiempoTranscurrido(m.id);
+
+    return `<div style="background:var(--sf);border:1.5px solid var(--orn);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <div style="font-size:16px;font-weight:900">${m.descripcion}</div>
+          <div style="font-size:11px;color:var(--mut);margin-top:3px">${m.fecha} · ${m.hora} · ${hace}</div>
+          <div style="font-size:10px;color:var(--orn);background:rgba(245,158,11,.1);border:1px solid var(--orn);border-radius:4px;padding:2px 8px;display:inline-block;margin-top:5px;font-weight:800">⏳ PENDIENTE</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:28px;font-weight:900;color:${monColor}">${monPrefix}${f2(monto)}</div>
+          ${arsEq}
+          ${m.moneda!=='ARS'?'<div style="font-size:10px;color:var(--mut);margin-top:2px">TC: $'+tc.toLocaleString('es-AR')+'</div>':''}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onclick="aprobarPago(${i})" style="padding:12px;border-radius:9px;border:none;background:var(--grn);color:#fff;font-size:13px;font-weight:900;cursor:pointer">✓ Aprobar</button>
+        <button onclick="rechazarPago(${i})" style="padding:12px;border-radius:9px;border:1.5px solid var(--red);background:rgba(239,68,68,.08);color:var(--red);font-size:13px;font-weight:800;cursor:pointer">✕ Rechazar</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('pendientes-app').innerHTML = `
+    <div style="padding:16px 20px;border-bottom:1px solid var(--br);background:var(--sf);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:18px;font-weight:900">🔔 Pagos pendientes <span style="color:var(--orn)">(${n})</span></div>
+        <div style="font-size:11px;color:var(--mut);margin-top:3px">Ingresados por clientes · Aprobá o rechazá cada pago</div>
+      </div>
+      <button onclick="renderPendientes()" style="padding:7px 14px;border-radius:7px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:11px;font-weight:700;cursor:pointer">🔄 Actualizar</button>
+    </div>
+    <div style="padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;overflow-y:auto;max-height:calc(100vh - 165px)">
+      ${cards}
+    </div>`;
+}
+
+async function aprobarPago(i){
+  const m = pendientesData[i];
+  // Calcular saldos acumulados
+  const ultimoMov = await sb.from('movimientos')
+    .select('saldo_ars,saldo_usd')
+    .eq('fecha', m.fecha)
+    .neq('estado','PENDIENTE')
+    .order('id',{ascending:false}).limit(1);
+  const lastARS = parseFloat(ultimoMov.data?.[0]?.saldo_ars)||sARS||0;
+  const lastUSD = parseFloat(ultimoMov.data?.[0]?.saldo_usd)||sUSD||0;
+
+  const iA = parseFloat(m.ing_ars)||0;
+  const iU = parseFloat(m.ing_usd)||0;
+  const newARS = lastARS + iA;
+  const newUSD = lastUSD + iU;
+
+  const {error} = await sb.from('movimientos').update({
+    estado: 'APROBADO',
+    verificado: true,
+    operadora: op,
+    saldo_ars: newARS,
+    saldo_usd: newUSD
+  }).eq('id', m.id);
+
+  if(error){ toast('Error al aprobar',1,1); return; }
+  toast('✓ Pago aprobado — '+m.descripcion+' '+( m.moneda==='ARS'?'$':'u$')+f2(parseFloat(m.monto)||0));
+  checkPendientesCount();
+  renderPendientes();
+  // Actualizar caja si estamos en el día correcto
+  if(fechaActual && fmtFecha(fechaActual)===m.fecha) recargarDesdeBD(m.fecha);
+}
+
+async function rechazarPago(i){
+  const m = pendientesData[i];
+  if(!confirm('¿Rechazar el pago de '+m.descripcion+'?\nSe eliminará del registro.')) return;
+  await sb.from('movimientos').delete().eq('id', m.id);
+  toast('Pago rechazado');
+  checkPendientesCount();
+  renderPendientes();
+}
+
+function tiempoTranscurrido(id){
+  const ts = parseInt(id);
+  if(!ts || ts < 1000000000000) return '';
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff/60000);
+  if(mins < 1) return 'hace un momento';
+  if(mins < 60) return 'hace '+mins+' min';
+  return 'hace '+Math.floor(mins/60)+'h';
+}
+
+// Inicializar pendientes al cargar
+initPendientes();
 
 </script>
 </body>
