@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- saved from url=(0069)file:///Users/matiasfrancois/Downloads/caja_workshop_supabase_12.html -->
+<!-- saved from url=(0069)file:///Users/matiasfrancois/Downloads/caja_workshop_supabase_13.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Caja Diaria — Work Shop v8</title>
+<title>Caja Diaria — Work Shop v9</title>
 <script src="./index_files/supabase.min.js"></script>
 <style>
 :root{
@@ -242,7 +242,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
     </div>
     <span id="syncBadge" class="sync-badge sync-ok">● En vivo</span>
     <div class="fbadge" id="fechaHoy">Martes, 7 de julio de 2026</div>
-    <span id="reloj" style="font-size:12px;color:var(--mut)">02:40:16 p. m.</span>
+    <span id="reloj" style="font-size:12px;color:var(--mut)">02:46:51 p. m.</span>
   </div>
 </header>
 
@@ -278,7 +278,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
       <input class="si-input" type="number" id="siARS" value="0" step="0.01" onchange="setSaldoIni()">
     </div>
   </div>
-  <div class="sc"><span class="sl">Saldo ARS</span><span class="sv sv-ars" id="sARS">$2.538.000,00</span></div>
+  <div class="sc"><span class="sl">Saldo ARS</span><span class="sv sv-ars" id="sARS">$2.022.000,00</span></div>
   <div class="sepv"></div>
   <div class="sc">
     <span class="sl">Saldo inicial USD</span>
@@ -287,15 +287,15 @@ tbody td{padding:6px 8px;vertical-align:middle}
       <input class="si-input si-input-usd" type="number" id="siUSD" value="0" step="0.01" onchange="setSaldoIni()">
     </div>
   </div>
-  <div class="sc"><span class="sl">Saldo USD</span><span class="sv sv-usd" id="sUSD">u$5.600,00</span></div>
+  <div class="sc"><span class="sl">Saldo USD</span><span class="sv sv-usd" id="sUSD">u$3.273,00</span></div>
   <div class="sepv"></div>
   <div class="sc"><span class="sl">▲ Ing ARS</span><span class="svs cg" id="iARS">$3.540.000,00</span></div>
-  <div class="sc"><span class="sl">▼ Egr ARS</span><span class="svs cr" id="eARS">$1.002.000,00</span></div>
+  <div class="sc"><span class="sl">▼ Egr ARS</span><span class="svs cr" id="eARS">$1.518.000,00</span></div>
   <div class="sepv"></div>
-  <div class="sc"><span class="sl">▲ Ing USD</span><span class="svs cg" id="iUSD">u$6.400,00</span></div>
-  <div class="sc"><span class="sl">▼ Egr USD</span><span class="svs cr" id="eUSD">u$800,00</span></div>
+  <div class="sc"><span class="sl">▲ Ing USD</span><span class="svs cg" id="iUSD">u$4.400,00</span></div>
+  <div class="sc"><span class="sl">▼ Egr USD</span><span class="svs cr" id="eUSD">u$1.127,00</span></div>
   <div class="sepv"></div>
-  <div class="sc"><span class="sl">Movimientos</span><span class="svs cm" id="cMov">9</span></div>
+  <div class="sc"><span class="sl">Movimientos</span><span class="svs cm" id="cMov">6</span></div>
   <span id="diaStatus" style="display:none;font-size:11px;font-weight:800;padding:3px 10px;border-radius:12px;border:1px solid var(--orn);background:rgba(245,158,11,.08);color:var(--orn)">🔒 Día cerrado</span>
 </div>
 
@@ -363,7 +363,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
     <div class="th">
       <div>
         <div class="tt" id="tblTitle">Movimientos del día</div>
-        <div class="ts" id="movSub">9 mov. · 1 verificado</div>
+        <div class="ts" id="movSub">6 mov. · 1 verificado</div>
       </div>
       <div class="ta">
         <button class="btn-sm" onclick="exportCSV()">⬇ CSV</button>
@@ -379,32 +379,32 @@ tbody td{padding:6px 8px;vertical-align:middle}
           <th>Ing. USD</th><th>Egr. USD</th><th>Saldo USD</th>
           <th>Notas</th><th style="position:sticky;right:0;background:var(--sf);z-index:2;box-shadow:-2px 0 4px rgba(0,0,0,.3)">Acciones</th>
         </tr></thead>
-        <tbody id="tbody"><tr class="">
+        <tbody id="tbody"><tr class="verified">
       <td class="cm" style="font-size:9px">1</td>
-      <td class="cm">10:32</td>
-      <td style="font-size:10px;color:var(--mut)">MAGGIE</td>
+      <td class="cm">11:23</td>
+      <td style="font-size:10px;color:var(--mut)">LAURA</td>
       <td><span class="chip ch-cobro">COBRO</span></td>
-      <td><strong>COBRO PRUEBA</strong></td>
-      <td class="cm">$1525</td>
-      <td><span class="n cu">u$3.000,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n sa">$0,00</span></td>
-      <td><span class="n cg">u$3.000,00</span></td><td><span class="cm">—</span></td><td><span class="n su">u$3.000,00</span></td>
+      <td><strong>Matias</strong><br><span style="font-size:10px;color:var(--mut)">Ingresado por cliente desde tablet</span></td>
+      <td class="cm">$1</td>
+      <td><span class="n ca">$3.540.000,00</span></td>
+      <td><span class="n cg">$3.540.000,00</span></td><td><span class="cm">—</span></td><td><span class="n sa">$3.540.000,00</span></td>
+      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n su">u$0,00</span></td>
       <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
       <td style="position:sticky;right:0;background:inherit;box-shadow:-2px 0 4px rgba(0,0,0,.2)"><div class="row-actions">
-          <button class="btn-verif " onclick="verificarMov(0)">○ Chequear</button>
+          <button class="btn-verif ok" onclick="verificarMov(0)">✓ OK</button>
           <button class="btn-edit" onclick="editarMov(0)">✏️</button>
           <button class="btn-del" onclick="eliminarMov(0)">🗑</button>
         </div></td>
     </tr><tr class="">
       <td class="cm" style="font-size:9px">2</td>
-      <td class="cm">10:32</td>
-      <td style="font-size:10px;color:var(--mut)">MAGGIE</td>
-      <td><span class="chip ch-pago">PAGO</span></td>
-      <td><strong>PAGO PRUEBA</strong></td>
+      <td class="cm">11:19</td>
+      <td style="font-size:10px;color:var(--mut)">LAURA</td>
+      <td><span class="chip ch-cobro">COBRO</span></td>
+      <td><strong>Walter</strong></td>
       <td class="cm">$1525</td>
-      <td><span class="n cu">u$500,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n sa">$0,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="n cr">u$500,00</span></td><td><span class="n su">u$2.500,00</span></td>
+      <td><span class="n cu">u$3.400,00</span></td>
+      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n sa">$3.540.000,00</span></td>
+      <td><span class="n cg">u$3.400,00</span></td><td><span class="cm">—</span></td><td><span class="n su">u$3.400,00</span></td>
       <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
       <td style="position:sticky;right:0;background:inherit;box-shadow:-2px 0 4px rgba(0,0,0,.2)"><div class="row-actions">
           <button class="btn-verif " onclick="verificarMov(1)">○ Chequear</button>
@@ -413,14 +413,14 @@ tbody td{padding:6px 8px;vertical-align:middle}
         </div></td>
     </tr><tr class="">
       <td class="cm" style="font-size:9px">3</td>
-      <td class="cm">10:44</td>
-      <td style="font-size:10px;color:var(--mut)">MAGGIE</td>
-      <td><span class="chip ch-gasto">GASTO</span></td>
-      <td><strong>PRUEBA GASTO</strong></td>
-      <td class="cm">$152</td>
-      <td><span class="n cu">u$200,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n sa">$0,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="n cr">u$200,00</span></td><td><span class="n su">u$2.300,00</span></td>
+      <td class="cm">11:35</td>
+      <td style="font-size:10px;color:var(--mut)">LAURA</td>
+      <td><span class="chip ch-pago">PAGO</span></td>
+      <td><strong>Turco</strong></td>
+      <td class="cm">$1525</td>
+      <td><span class="n ca">$1.000,00</span></td>
+      <td><span class="cm">—</span></td><td><span class="n cr">$1.000,00</span></td><td><span class="n sa">$3.539.000,00</span></td>
+      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n su">u$3.400,00</span></td>
       <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
       <td style="position:sticky;right:0;background:inherit;box-shadow:-2px 0 4px rgba(0,0,0,.2)"><div class="row-actions">
           <button class="btn-verif " onclick="verificarMov(2)">○ Chequear</button>
@@ -429,14 +429,14 @@ tbody td{padding:6px 8px;vertical-align:middle}
         </div></td>
     </tr><tr class="">
       <td class="cm" style="font-size:9px">4</td>
-      <td class="cm">10:45</td>
+      <td class="cm">11:21</td>
       <td style="font-size:10px;color:var(--mut)">MAGGIE</td>
-      <td><span class="chip ch-retiro">RETIRO</span></td>
-      <td><strong>retiro modificado</strong></td>
-      <td class="cm">$1510</td>
-      <td><span class="n cu">u$100,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n sa">$0,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="n cr">u$100,00</span></td><td><span class="n su">u$2.200,00</span></td>
+      <td><span class="chip ch-pago">PAGO</span></td>
+      <td><strong>MAZZEO</strong></td>
+      <td class="cm">$1515</td>
+      <td><span class="n ca">$2.000,00</span></td>
+      <td><span class="cm">—</span></td><td><span class="n cr">$2.000,00</span></td><td><span class="n sa">$3.537.000,00</span></td>
+      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n su">u$3.400,00</span></td>
       <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
       <td style="position:sticky;right:0;background:inherit;box-shadow:-2px 0 4px rgba(0,0,0,.2)"><div class="row-actions">
           <button class="btn-verif " onclick="verificarMov(3)">○ Chequear</button>
@@ -445,14 +445,14 @@ tbody td{padding:6px 8px;vertical-align:middle}
         </div></td>
     </tr><tr class="">
       <td class="cm" style="font-size:9px">5</td>
-      <td class="cm">11:17</td>
-      <td style="font-size:10px;color:var(--mut)">LAURA</td>
-      <td><span class="chip ch-retiro">RETIRO</span></td>
-      <td><strong>Matias</strong></td>
-      <td class="cm">$1525</td>
-      <td><span class="n ca">$1.000.000,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="n cr">$1.000.000,00</span></td><td><span class="n cr">$-1.000.000,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n su">u$2.200,00</span></td>
+      <td class="cm">14:44</td>
+      <td style="font-size:10px;color:var(--mut)">MAGGIE</td>
+      <td><span class="chip ch-pago">PAGO</span></td>
+      <td><strong>MAZZEO</strong></td>
+      <td class="cm">$1515</td>
+      <td><span class="n cu">u$1.127,00</span></td>
+      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n sa">$3.537.000,00</span></td>
+      <td><span class="cm">—</span></td><td><span class="n cr">u$1.127,00</span></td><td><span class="n su">u$2.273,00</span></td>
       <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
       <td style="position:sticky;right:0;background:inherit;box-shadow:-2px 0 4px rgba(0,0,0,.2)"><div class="row-actions">
           <button class="btn-verif " onclick="verificarMov(4)">○ Chequear</button>
@@ -461,67 +461,19 @@ tbody td{padding:6px 8px;vertical-align:middle}
         </div></td>
     </tr><tr class="">
       <td class="cm" style="font-size:9px">6</td>
-      <td class="cm">11:17</td>
+      <td class="cm">14:44</td>
       <td style="font-size:10px;color:var(--mut)">MAGGIE</td>
-      <td><span class="chip ch-retiro">RETIRO</span></td>
-      <td><strong>retiro pesos</strong></td>
-      <td class="cm">$1510</td>
-      <td><span class="n ca">$1.000,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="n cr">$1.000,00</span></td><td><span class="n cr">$-1.001.000,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n su">u$2.200,00</span></td>
+      <td><span class="chip ch-divisa">DIVISA</span></td>
+      <td><strong>COMPRA DIVISA MATIAS - RETIRO HTA MAÑANA</strong></td>
+      <td class="cm">$1515</td>
+      <td><span class="n cu">u$1.000,00</span></td>
+      <td><span class="cm">—</span></td><td><span class="n cr">$1.515.000,00</span></td><td><span class="n sa">$2.022.000,00</span></td>
+      <td><span class="n cg">u$1.000,00</span></td><td><span class="cm">—</span></td><td><span class="n su">u$3.273,00</span></td>
       <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
       <td style="position:sticky;right:0;background:inherit;box-shadow:-2px 0 4px rgba(0,0,0,.2)"><div class="row-actions">
           <button class="btn-verif " onclick="verificarMov(5)">○ Chequear</button>
           <button class="btn-edit" onclick="editarMov(5)">✏️</button>
           <button class="btn-del" onclick="eliminarMov(5)">🗑</button>
-        </div></td>
-    </tr><tr class="verified">
-      <td class="cm" style="font-size:9px">7</td>
-      <td class="cm">11:23</td>
-      <td style="font-size:10px;color:var(--mut)">LAURA</td>
-      <td><span class="chip ch-cobro">COBRO</span></td>
-      <td><strong>Matias</strong><br><span style="font-size:10px;color:var(--mut)">Ingresado por cliente desde tablet</span></td>
-      <td class="cm">$1</td>
-      <td><span class="n ca">$3.540.000,00</span></td>
-      <td><span class="n cg">$3.540.000,00</span></td><td><span class="cm">—</span></td><td><span class="n sa">$2.539.000,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n su">u$2.200,00</span></td>
-      <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
-      <td style="position:sticky;right:0;background:inherit;box-shadow:-2px 0 4px rgba(0,0,0,.2)"><div class="row-actions">
-          <button class="btn-verif ok" onclick="verificarMov(6)">✓ OK</button>
-          <button class="btn-edit" onclick="editarMov(6)">✏️</button>
-          <button class="btn-del" onclick="eliminarMov(6)">🗑</button>
-        </div></td>
-    </tr><tr class="">
-      <td class="cm" style="font-size:9px">8</td>
-      <td class="cm">11:19</td>
-      <td style="font-size:10px;color:var(--mut)">LAURA</td>
-      <td><span class="chip ch-cobro">COBRO</span></td>
-      <td><strong>Walter</strong></td>
-      <td class="cm">$1525</td>
-      <td><span class="n cu">u$3.400,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n sa">$2.539.000,00</span></td>
-      <td><span class="n cg">u$3.400,00</span></td><td><span class="cm">—</span></td><td><span class="n su">u$5.600,00</span></td>
-      <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
-      <td style="position:sticky;right:0;background:inherit;box-shadow:-2px 0 4px rgba(0,0,0,.2)"><div class="row-actions">
-          <button class="btn-verif " onclick="verificarMov(7)">○ Chequear</button>
-          <button class="btn-edit" onclick="editarMov(7)">✏️</button>
-          <button class="btn-del" onclick="eliminarMov(7)">🗑</button>
-        </div></td>
-    </tr><tr class="">
-      <td class="cm" style="font-size:9px">9</td>
-      <td class="cm">11:35</td>
-      <td style="font-size:10px;color:var(--mut)">LAURA</td>
-      <td><span class="chip ch-pago">PAGO</span></td>
-      <td><strong>Turco</strong></td>
-      <td class="cm">$1525</td>
-      <td><span class="n ca">$1.000,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="n cr">$1.000,00</span></td><td><span class="n sa">$2.538.000,00</span></td>
-      <td><span class="cm">—</span></td><td><span class="cm">—</span></td><td><span class="n su">u$5.600,00</span></td>
-      <td style="font-size:10px;color:var(--mut);max-width:0;overflow:hidden"></td>
-      <td style="position:sticky;right:0;background:inherit;box-shadow:-2px 0 4px rgba(0,0,0,.2)"><div class="row-actions">
-          <button class="btn-verif " onclick="verificarMov(8)">○ Chequear</button>
-          <button class="btn-edit" onclick="editarMov(8)">✏️</button>
-          <button class="btn-del" onclick="eliminarMov(8)">🗑</button>
         </div></td>
     </tr></tbody>
       </table>
@@ -1324,10 +1276,16 @@ function updSaldos(){
 }
 
 // ===== CIERRE =====
-function showCierre(){
+async function showCierre(){
+  // Recargar movimientos frescos desde Supabase antes de mostrar el cierre
+  if(!fechaActual) return;
+  await recargarDesdeBD(fmtFecha(fechaActual));
   const tIA=movs.reduce((s,m)=>s+m.iA,0),tEA=movs.reduce((s,m)=>s+m.eA,0);
   const tIU=movs.reduce((s,m)=>s+m.iU,0),tEU=movs.reduce((s,m)=>s+m.eU,0);
   const verif=movs.filter(m=>m.ok).length;
+  // Actualizar fecha y contador en el header del modal
+  document.getElementById('cFecha').textContent = fechaActual.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('cSub').textContent = movs.length+' movimientos · '+movs.filter(m=>m.ok).length+' verificados';
   document.getElementById('c_siA').textContent='$'+f0(saldoIniARS);
   document.getElementById('c_iA').textContent='$'+f0(tIA);
   document.getElementById('c_eA').textContent='$'+f0(tEA);
