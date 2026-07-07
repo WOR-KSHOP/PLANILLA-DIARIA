@@ -1460,6 +1460,9 @@ async function renderNeo(){
   const mes = new Date().toLocaleDateString('es-AR',{month:'long',year:'numeric'});
   const totalARS = neoMovs.reduce((s,m) => s + (parseFloat(m.pesos)||0), 0);
   const totalUSD = neoMovs.reduce((s,m) => s + (parseFloat(m.usd)||0), 0);
+  // Saldo inicial desde Supabase
+  const {data:neoSI} = await sb.from('saldos_iniciales').select('*').eq('fecha','neo_capital_ini').maybeSingle();
+  const neoSaldoIni = parseFloat(neoSI?.saldo_usd)||0;
 
   const rows = neoMovs.map((m,i) => {
     const d = new Date(m.fecha+'T00:00:00');
@@ -1488,14 +1491,27 @@ async function renderNeo(){
         <div style="font-size:18px;font-weight:900">🏦 Neo Capital — Transferencias</div>
         <div style="font-size:11px;color:var(--mut);margin-top:2px">Conversión de Pesos a USD</div>
       </div>
-      <div style="display:flex;gap:12px">
-        <div style="background:var(--sf2);border-radius:8px;padding:10px 16px;border-left:3px solid var(--ars)">
+      <div style="display:flex;gap:10px;align-items:center">
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--mut)">
+          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo inicial USD</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+            <span style="color:var(--usd);font-size:12px;font-weight:700">u$</span>
+            <input type="number" id="neoSaldoIni" value="`+neoSaldoIni+`" step="0.01" min="0"
+              onchange="saveNeoSaldoIni()"
+              style="background:transparent;border:none;border-bottom:1px dashed var(--br);color:var(--usd);font-size:15px;font-weight:900;width:100px;padding:1px 2px;font-family:var(--fnt)">
+          </div>
+        </div>
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--ars)">
           <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Total Pesos</div>
           <div style="font-size:16px;font-weight:900;color:var(--ars)">$`+f0(totalARS)+`</div>
         </div>
-        <div style="background:var(--sf2);border-radius:8px;padding:10px 16px;border-left:3px solid var(--usd)">
-          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Total USD</div>
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--usd)">
+          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Total USD registrado</div>
           <div style="font-size:16px;font-weight:900;color:var(--usd)">u$`+f2(totalUSD)+`</div>
+        </div>
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 14px;border-left:3px solid #10b981">
+          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo total USD</div>
+          <div style="font-size:20px;font-weight:900;color:#10b981">u$`+f2(neoSaldoIni+totalUSD)+`</div>
         </div>
       </div>
     </div>
@@ -1677,6 +1693,18 @@ function neoEditar(i){
   document.getElementById('neoBtnCancel').style.display = 'block';
 }
 
+async function saveNeoSaldoIni(){
+  const val = parseFloat(document.getElementById('neoSaldoIni')?.value)||0;
+  await sb.from('saldos_iniciales').upsert({
+    fecha: 'neo_capital_ini',
+    saldo_ars: 0,
+    saldo_usd: val,
+    updated_at: new Date().toISOString()
+  });
+  toast('✓ Saldo inicial Neo Capital guardado');
+  renderNeo();
+}
+
 let neoTipo = 'TRANSFERENCIA';
 function setNeoTipo(t){
   neoTipo = t;
@@ -1718,7 +1746,11 @@ async function renderUSDT(){
 
   const totalCompra = usdtMovs.filter(m=>m.tipo==='COMPRA').reduce((s,m)=>s+(parseFloat(m.usdt)||0),0);
   const totalVenta = usdtMovs.filter(m=>m.tipo==='VENTA').reduce((s,m)=>s+(parseFloat(m.usdt)||0),0);
-  const saldoUSDT = totalCompra - totalVenta;
+  const totalExtrac = usdtMovs.filter(m=>m.tipo==='EXTRACCION').reduce((s,m)=>s+(parseFloat(m.usdt)||0),0);
+  const saldoUSDT = totalCompra - totalVenta - totalExtrac;
+  // Saldo inicial desde Supabase
+  const {data:usdtSI} = await sb.from('saldos_iniciales').select('*').eq('fecha','usdt_ini').maybeSingle();
+  const usdtSaldoIni = parseFloat(usdtSI?.saldo_usd)||0;
 
   const rows = usdtMovs.map((m,i) => {
     const d = new Date(m.fecha+'T00:00:00');
@@ -1743,18 +1775,27 @@ async function renderUSDT(){
         <div style="font-size:18px;font-weight:900">⚡ USDT — Dólar Digital</div>
         <div style="font-size:11px;color:var(--mut);margin-top:2px">Compras y ventas de USDT</div>
       </div>
-      <div style="display:flex;gap:12px">
-        <div style="background:var(--sf2);border-radius:8px;padding:10px 16px;border-left:3px solid var(--grn)">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--mut)">
+          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo inicial USDT</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+            <span style="color:#a78bfa;font-size:12px;font-weight:700">⚡</span>
+            <input type="number" id="usdtSaldoIni" value="`+usdtSaldoIni+`" step="0.01" min="0"
+              onchange="saveUsdtSaldoIni()"
+              style="background:transparent;border:none;border-bottom:1px dashed var(--br);color:#a78bfa;font-size:15px;font-weight:900;width:100px;padding:1px 2px;font-family:var(--fnt)">
+          </div>
+        </div>
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--grn)">
           <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Comprado</div>
           <div style="font-size:16px;font-weight:900;color:var(--grn)">⚡`+f2(totalCompra)+`</div>
         </div>
-        <div style="background:var(--sf2);border-radius:8px;padding:10px 16px;border-left:3px solid var(--red)">
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--red)">
           <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Vendido</div>
           <div style="font-size:16px;font-weight:900;color:var(--red)">⚡`+f2(totalVenta)+`</div>
         </div>
-        <div style="background:var(--sf2);border-radius:8px;padding:10px 16px;border-left:3px solid #a78bfa">
-          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo USDT</div>
-          <div style="font-size:20px;font-weight:900;color:#a78bfa">⚡`+f2(saldoUSDT)+`</div>
+        <div style="background:var(--sf2);border-radius:8px;padding:10px 14px;border-left:3px solid #a78bfa">
+          <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo total USDT</div>
+          <div style="font-size:20px;font-weight:900;color:#a78bfa">⚡`+f2(usdtSaldoIni+saldoUSDT)+`</div>
         </div>
       </div>
     </div>
@@ -1834,6 +1875,18 @@ async function renderUSDT(){
   const fechaHoy2 = hoy2.getFullYear()+'-'+String(hoy2.getMonth()+1).padStart(2,'0')+'-'+String(hoy2.getDate()).padStart(2,'0');
   if(document.getElementById('usdtFecha')) document.getElementById('usdtFecha').value = fechaHoy2;
   setUsdtTipo('COMPRA');
+}
+
+async function saveUsdtSaldoIni(){
+  const val = parseFloat(document.getElementById('usdtSaldoIni')?.value)||0;
+  await sb.from('saldos_iniciales').upsert({
+    fecha: 'usdt_ini',
+    saldo_ars: 0,
+    saldo_usd: val,
+    updated_at: new Date().toISOString()
+  });
+  toast('⚡ Saldo inicial USDT guardado');
+  renderUSDT();
 }
 
 let usdtTipo = 'COMPRA';
