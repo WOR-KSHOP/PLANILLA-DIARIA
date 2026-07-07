@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Caja Diaria — Work Shop v10</title>
+<title>Caja Diaria — Work Shop v11</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
 <style>
 :root{
@@ -1317,7 +1317,9 @@ function generarTicket(tIA,tEA,tIU,tEU,verif){
   let movsList='';
   movs.forEach(m=>{const s=m.tipo==='DIVISA'?`u$${f2(m.monto)}`:m.moneda==='ARS'?`$${f0(m.monto)}`:`u$${f2(m.monto)}`;movsList+=`\n  ${m.ok?'✓':'○'} ${m.hora} [${m.tipo}] ${m.desc} — ${s}${m.notas?' ('+m.notas+')':''}`;});
   // Calcular arqueo para ticket
-  const tARS = parseFloat(document.getElementById('totalArqueoARS').textContent.replace('$','').replace(/\./g,'').replace(',','.')) || 0;
+  const elTA=document.getElementById('totalArqueoARS');
+  const tUSDarq = elTU ? parseFloat(elTU.textContent.replace('u$','').replace(/\./g,'').replace(',','.')) || 0 : 0;
+  const tARS = elTA ? parseFloat(elTA.textContent.replace('$','').replace(/\./g,'').replace(',','.')) || 0 : 0;
   const tUSDarq = parseFloat(document.getElementById('totalArqueoUSD').textContent.replace('u$','').replace(/\./g,'').replace(',','.')) || 0;
   const hasArqueo = document.getElementById('bARS100').value > 0 || document.getElementById('bUSD100').value > 0;
   const difARSnum = sARS - tARS;
