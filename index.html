@@ -211,6 +211,18 @@ tbody td{padding:6px 8px;vertical-align:middle}
 .tab-btn.active{color:var(--acc);border-bottom-color:var(--acc)}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
+
+/* BUSCADOR */
+.search-bar{display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--sf);border-bottom:1px solid var(--br);flex-wrap:wrap}
+.search-input{flex:1;min-width:200px;background:var(--sf2);border:1.5px solid var(--br);border-radius:8px;padding:7px 12px;color:var(--txt);font-size:13px;font-family:var(--fnt);transition:border-color .14s}
+.search-input:focus{outline:none;border-color:var(--acc)}
+.search-label{font-size:10px;font-weight:800;color:var(--mut);text-transform:uppercase;white-space:nowrap}
+.search-date{background:var(--sf2);border:1.5px solid var(--br);border-radius:8px;padding:7px 10px;color:var(--txt);font-size:12px;font-family:var(--fnt)}
+.search-date:focus{outline:none;border-color:var(--acc)}
+.search-count{font-size:11px;color:var(--mut);white-space:nowrap}
+.btn-search-clear{padding:6px 12px;border-radius:7px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-search-clear:hover{border-color:var(--red);color:var(--red)}
+.highlight{background:rgba(251,191,36,.25);border-radius:2px;padding:0 2px}
 </style>
 </head>
 <body>
@@ -284,6 +296,17 @@ tbody td{padding:6px 8px;vertical-align:middle}
   <span id="diaStatus" style="display:none;font-size:11px;font-weight:800;padding:3px 10px;border-radius:12px;border:1px solid var(--orn);background:rgba(245,158,11,.08);color:var(--orn)">🔒 Día cerrado</span>
 </div>
 
+<!-- BUSCADOR CAJA -->
+<div class="search-bar" id="cajaBuscador">
+  <span class="search-label">🔍 Buscar</span>
+  <input class="search-input" type="text" id="cajaSearch" placeholder="Descripción, tipo, operadora..." oninput="filtrarCaja()">
+  <span class="search-label">Desde</span>
+  <input class="search-date" type="date" id="cajaDesde" onchange="filtrarCaja()">
+  <span class="search-label">Hasta</span>
+  <input class="search-date" type="date" id="cajaHasta" onchange="filtrarCaja()">
+  <button class="btn-search-clear" onclick="limpiarBuscadorCaja()">✕ Limpiar</button>
+  <span class="search-count" id="cajaSearchCount"></span>
+</div>
 <div class="main">
   <div class="fp" id="formPanel">
     <div class="pt">
@@ -1491,6 +1514,16 @@ async function renderNeo(){
         <div style="font-size:18px;font-weight:900">🏦 Neo Capital — Transferencias</div>
         <div style="font-size:11px;color:var(--mut);margin-top:2px">Conversión de Pesos a USD</div>
       </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;background:var(--sf2);border:1.5px solid var(--br);border-radius:8px;padding:5px 10px;min-width:200px">
+          <span style="color:var(--mut);font-size:13px">🔍</span>
+          <input type="text" id="neoSearch" placeholder="Cliente, banco, emisor..." oninput="filtrarNeo()" style="background:none;border:none;color:var(--txt);font-size:12px;font-family:var(--fnt);outline:none;width:160px">
+        </div>
+        <input type="date" id="neoDesde" onchange="filtrarNeo()" title="Desde" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:8px;padding:5px 9px;color:var(--txt);font-size:12px;font-family:var(--fnt)">
+        <input type="date" id="neoHasta" onchange="filtrarNeo()" title="Hasta" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:8px;padding:5px 9px;color:var(--txt);font-size:12px;font-family:var(--fnt)">
+        <button onclick="limpiarBuscadorNeo()" style="padding:5px 10px;border-radius:7px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:11px;font-weight:700;cursor:pointer">✕</button>
+        <span id="neoSearchCount" style="font-size:11px;color:var(--mut)"></span>
+      </div>
       <div style="display:flex;gap:10px;align-items:center">
         <div style="background:var(--sf2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--mut)">
           <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo inicial USD</div>
@@ -1775,6 +1808,16 @@ async function renderUSDT(){
         <div style="font-size:18px;font-weight:900">⚡ USDT — Dólar Digital</div>
         <div style="font-size:11px;color:var(--mut);margin-top:2px">Compras y ventas de USDT</div>
       </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:6px;background:var(--sf2);border:1.5px solid var(--br);border-radius:8px;padding:5px 10px;min-width:200px">
+          <span style="color:var(--mut);font-size:13px">🔍</span>
+          <input type="text" id="usdtSearch" placeholder="Descripción, tipo..." oninput="filtrarUSDT()" style="background:none;border:none;color:var(--txt);font-size:12px;font-family:var(--fnt);outline:none;width:160px">
+        </div>
+        <input type="date" id="usdtDesde" onchange="filtrarUSDT()" title="Desde" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:8px;padding:5px 9px;color:var(--txt);font-size:12px;font-family:var(--fnt)">
+        <input type="date" id="usdtHasta" onchange="filtrarUSDT()" title="Hasta" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:8px;padding:5px 9px;color:var(--txt);font-size:12px;font-family:var(--fnt)">
+        <button onclick="limpiarBuscadorUSDT()" style="padding:5px 10px;border-radius:7px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:11px;font-weight:700;cursor:pointer">✕</button>
+        <span id="usdtSearchCount" style="font-size:11px;color:var(--mut)"></span>
+      </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div style="background:var(--sf2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--mut)">
           <div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo inicial USDT</div>
@@ -1945,6 +1988,215 @@ async function usdtEliminar(i){
   if(!confirm('¿Eliminar esta operación?')) return;
   await sb.from('usdt_movimientos').delete().eq('id', usdtMovs[i].id);
   toast('Eliminada');
+  renderUSDT();
+}
+
+
+// ===== BUSCADOR CAJA =====
+let todosLosMovs = []; // cache de búsqueda histórica
+let modosBusqueda = false;
+
+async function filtrarCaja(){
+  const texto = (document.getElementById('cajaSearch')?.value || '').toLowerCase().trim();
+  const desde = document.getElementById('cajaDesde')?.value || '';
+  const hasta = document.getElementById('cajaHasta')?.value || '';
+  const hayFiltro = texto || desde || hasta;
+
+  if(!hayFiltro){
+    // Sin filtro: mostrar día actual normalmente
+    if(modosBusqueda){
+      modosBusqueda = false;
+      await cargarDia(fechaActual);
+    }
+    document.getElementById('cajaSearchCount').textContent = '';
+    return;
+  }
+
+  modosBusqueda = true;
+  document.getElementById('loadingOverlay').classList.add('show');
+
+  try {
+    // Buscar en Supabase con filtros
+    let query = sb.from('movimientos').select('*').order('fecha').order('id');
+
+    if(desde) query = query.gte('fecha', desde);
+    if(hasta) query = query.lte('fecha', hasta);
+    if(texto){
+      query = query.or('descripcion.ilike.%'+texto+'%,tipo.ilike.%'+texto+'%,operadora.ilike.%'+texto+'%,notas.ilike.%'+texto+'%');
+    }
+
+    const {data, error} = await query.limit(500);
+    if(error){ console.error(error); return; }
+
+    const resultados = data || [];
+    document.getElementById('cajaSearchCount').textContent = resultados.length + ' resultado' + (resultados.length !== 1 ? 's' : '');
+
+    // Renderizar resultados en la tabla
+    renderBusqueda(resultados, texto);
+  } finally {
+    document.getElementById('loadingOverlay').classList.remove('show');
+  }
+}
+
+function renderBusqueda(resultados, texto){
+  const tb = document.getElementById('tbody');
+  document.getElementById('tblTitle').textContent = '🔍 Resultados de búsqueda';
+  document.getElementById('movSub').textContent = resultados.length + ' movimientos encontrados';
+
+  if(!resultados.length){
+    tb.innerHTML = '<tr><td colspan="15"><div class="empty"><div class="eic">🔍</div>Sin resultados para esa búsqueda</div></td></tr>';
+    return;
+  }
+
+  tb.innerHTML = resultados.map((m, i) => {
+    const iA = parseFloat(m.ing_ars)||0;
+    const eA = parseFloat(m.egr_ars)||0;
+    const sA = parseFloat(m.saldo_ars)||0;
+    const iU = parseFloat(m.ing_usd)||0;
+    const eU = parseFloat(m.egr_usd)||0;
+    const sU = parseFloat(m.saldo_usd)||0;
+    const desc = texto ? m.descripcion.replace(new RegExp('('+texto+')', 'gi'), '<span class="highlight">$1</span>') : m.descripcion;
+    const chip = '<span class="chip ch-'+(m.tipo||'').toLowerCase()+'">'+(m.tipo||'')+'</span>';
+    const mOrig = m.moneda==='USD' ? 'u$'+f2(parseFloat(m.monto)||0) : '$'+f0(parseFloat(m.monto)||0);
+    return '<tr>'+
+      '<td class="cm" style="font-size:9px">'+(i+1)+'</td>'+
+      '<td style="font-size:10px;color:var(--acc);font-weight:700">'+m.fecha+'</td>'+
+      '<td class="cm">'+m.hora+'</td>'+
+      '<td style="font-size:10px;color:var(--mut)">'+m.operadora+'</td>'+
+      '<td>'+chip+'</td>'+
+      '<td><strong>'+desc+'</strong>'+(m.notas?'<br><span style="font-size:10px;color:var(--mut)">'+m.notas+'</span>':'')+'</td>'+
+      '<td class="cm">$'+(parseFloat(m.cotiz)||0).toLocaleString('es-AR')+'</td>'+
+      '<td>'+mOrig+'</td>'+
+      '<td>'+(iA>0?'<span class="n cg">$'+f0(iA)+'</span>':'<span class="cm">—</span>')+'</td>'+
+      '<td>'+(eA>0?'<span class="n cr">$'+f0(eA)+'</span>':'<span class="cm">—</span>')+'</td>'+
+      '<td><span class="n '+(sA>=0?'sa':'cr')+'">$'+f0(sA)+'</span></td>'+
+      '<td>'+(iU>0?'<span class="n cg">u$'+f2(iU)+'</span>':'<span class="cm">—</span>')+'</td>'+
+      '<td>'+(eU>0?'<span class="n cr">u$'+f2(eU)+'</span>':'<span class="cm">—</span>')+'</td>'+
+      '<td><span class="n '+(sU>=0?'su':'cr')+'">u$'+f2(sU)+'</span></td>'+
+      '<td><span style="font-size:10px;color:'+(m.verificado?'var(--grn)':'var(--orn)')+'">'+( m.verificado?'✓':'○')+'</span></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function limpiarBuscadorCaja(){
+  document.getElementById('cajaSearch').value = '';
+  document.getElementById('cajaDesde').value = '';
+  document.getElementById('cajaHasta').value = '';
+  document.getElementById('cajaSearchCount').textContent = '';
+  if(modosBusqueda){
+    modosBusqueda = false;
+    cargarDia(fechaActual);
+  }
+}
+
+// ===== BUSCADOR NEO CAPITAL =====
+async function filtrarNeo(){
+  const texto = (document.getElementById('neoSearch')?.value || '').toLowerCase().trim();
+  const desde = document.getElementById('neoDesde')?.value || '';
+  const hasta = document.getElementById('neoHasta')?.value || '';
+
+  let query = sb.from('neo_capital').select('*').order('fecha',{ascending:false}).order('id',{ascending:false});
+  if(desde) query = query.gte('fecha', desde);
+  if(hasta) query = query.lte('fecha', hasta);
+  if(texto) query = query.or('cliente.ilike.%'+texto+'%,banco.ilike.%'+texto+'%,emisor.ilike.%'+texto+'%,observaciones.ilike.%'+texto+'%,tipo_mov.ilike.%'+texto+'%');
+
+  const {data} = await query.limit(500);
+  neoMovs = data || [];
+  const count = document.getElementById('neoSearchCount');
+  if(count) count.textContent = neoMovs.length + ' resultado' + (neoMovs.length!==1?'s':'');
+
+  // Re-render solo la tabla sin recargar todo
+  renderNeoTabla(neoMovs, texto);
+}
+
+function renderNeoTabla(movs, texto){
+  const tbody = document.querySelector('#neo-app tbody');
+  if(!tbody) return;
+  if(!movs.length){
+    tbody.innerHTML = '<tr><td colspan="9"><div style="padding:30px;text-align:center;color:var(--mut)">Sin resultados</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = movs.map((m,i) => {
+    const d = new Date(m.fecha+'T00:00:00');
+    const fLabel = d.toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'2-digit'});
+    const cli = texto ? m.cliente.replace(new RegExp('('+texto+')', 'gi'), '<span class="highlight">$1</span>') : m.cliente;
+    return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)">'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--acc);font-weight:700">'+fLabel+'</td>'+
+      '<td style="padding:7px 10px;font-size:12px;font-weight:700">'+cli+'</td>'+
+      '<td style="padding:7px 10px;font-size:12px;color:var(--ars);font-weight:700">$'+f0(parseFloat(m.pesos)||0)+'</td>'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--mut)">$'+(parseFloat(m.tc)||0).toLocaleString('es-AR')+'</td>'+
+      '<td style="padding:7px 10px;font-size:13px;font-weight:900;color:var(--usd)">u$'+f2(parseFloat(m.usd)||0)+'</td>'+
+      '<td style="padding:7px 10px;font-size:10px;color:var(--mut)">'+( m.banco||'—')+'</td>'+
+      '<td style="padding:7px 10px;font-size:10px;color:var(--mut)">'+( m.emisor||'—')+'</td>'+
+      '<td style="padding:7px 10px;font-size:10px;color:var(--mut)">'+( m.fecha_cupon||'—')+' '+(m.hora_cupon||'')+'</td>'+
+      '<td style="padding:7px 10px"><span style="padding:2px 6px;border-radius:3px;font-size:9px;font-weight:900;background:'+(m.tipo_mov==='EXTRACCION'?'rgba(239,68,68,.1)':'rgba(96,165,250,.1)')+';color:'+(m.tipo_mov==='EXTRACCION'?'var(--red)':'#60a5fa')+'">'+(m.tipo_mov||'TRANSF.')+'</span></td>'+
+      '<td style="padding:7px 10px;font-size:10px;color:var(--mut)">'+( m.observaciones||'—')+'</td>'+
+      '<td style="padding:7px 10px"><div style="display:flex;gap:4px">'+
+        '<button onclick="neoEditar('+i+')" style="padding:3px 8px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer">✏️</button>'+
+        '<button onclick="neoEliminar('+i+')" style="padding:3px 8px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer">🗑</button>'+
+      '</div></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function limpiarBuscadorNeo(){
+  document.getElementById('neoSearch').value='';
+  document.getElementById('neoDesde').value='';
+  document.getElementById('neoHasta').value='';
+  document.getElementById('neoSearchCount').textContent='';
+  renderNeo();
+}
+
+// ===== BUSCADOR USDT =====
+async function filtrarUSDT(){
+  const texto = (document.getElementById('usdtSearch')?.value||'').toLowerCase().trim();
+  const desde = document.getElementById('usdtDesde')?.value||'';
+  const hasta = document.getElementById('usdtHasta')?.value||'';
+
+  let query = sb.from('usdt_movimientos').select('*').order('fecha',{ascending:false}).order('id',{ascending:false});
+  if(desde) query = query.gte('fecha', desde);
+  if(hasta) query = query.lte('fecha', hasta);
+  if(texto) query = query.or('descripcion.ilike.%'+texto+'%,tipo.ilike.%'+texto+'%,observaciones.ilike.%'+texto+'%');
+
+  const {data} = await query.limit(500);
+  usdtMovs = data||[];
+  const count = document.getElementById('usdtSearchCount');
+  if(count) count.textContent = usdtMovs.length+' resultado'+(usdtMovs.length!==1?'s':'');
+  renderUsdtTabla(usdtMovs, texto);
+}
+
+function renderUsdtTabla(movs, texto){
+  const tbody = document.querySelector('#usdt-app tbody');
+  if(!tbody) return;
+  if(!movs.length){
+    tbody.innerHTML='<tr><td colspan="8"><div style="padding:30px;text-align:center;color:var(--mut)">Sin resultados</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = movs.map((m,i)=>{
+    const d = new Date(m.fecha+'T00:00:00');
+    const fLabel = d.toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'2-digit'});
+    const color = m.tipo==='COMPRA'?'var(--grn)':m.tipo==='EXTRACCION'?'var(--orn)':'var(--red)';
+    const bg = m.tipo==='COMPRA'?'rgba(16,185,129,.12)':m.tipo==='EXTRACCION'?'rgba(245,158,11,.1)':'rgba(239,68,68,.1)';
+    const desc = texto ? (m.descripcion||'').replace(new RegExp('('+texto+')','gi'),'<span class="highlight">$1</span>') : (m.descripcion||'');
+    return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)">'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--acc);font-weight:700">'+fLabel+'</td>'+
+      '<td style="padding:7px 10px"><span style="padding:2px 7px;border-radius:4px;font-size:9px;font-weight:900;background:'+bg+';color:'+color+'">'+m.tipo+'</span></td>'+
+      '<td style="padding:7px 10px;font-size:12px;font-weight:700">'+desc+'</td>'+
+      '<td style="padding:7px 10px;font-size:13px;font-weight:900;color:#a78bfa">⚡'+f2(parseFloat(m.usdt)||0)+'</td>'+
+      '<td style="padding:7px 10px;font-size:12px;color:var(--ars)">$'+f0(parseFloat(m.pesos)||0)+'</td>'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--mut)">$'+(parseFloat(m.tc)||0).toLocaleString('es-AR')+'</td>'+
+      '<td style="padding:7px 10px;font-size:10px;color:var(--mut)">'+m.operadora+'</td>'+
+      '<td style="padding:7px 10px;font-size:10px;color:var(--mut)">'+( m.observaciones||'—')+'</td>'+
+      '<td style="padding:7px 10px"><button onclick="usdtEliminar('+i+')" style="padding:3px 8px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer">🗑</button></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function limpiarBuscadorUSDT(){
+  document.getElementById('usdtSearch').value='';
+  document.getElementById('usdtDesde').value='';
+  document.getElementById('usdtHasta').value='';
+  document.getElementById('usdtSearchCount').textContent='';
   renderUSDT();
 }
 
