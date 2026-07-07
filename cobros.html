@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0061)file:///Users/matiasfrancois/Downloads/cobros_clientes_1.html -->
+<!-- saved from url=(0061)file:///Users/matiasfrancois/Downloads/cobros_clientes_3.html -->
 <html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -101,7 +101,7 @@ input::placeholder{color:var(--mut)}
       <label>👤 Tu nombre</label>
       <input type="text" id="inputNombre" placeholder="Escribí tu nombre..." autocomplete="off" autocorrect="off">
     </div>
-    <button class="btn-main btn-pagar" onclick="irScreen2()" id="btnSiguiente1">Continuar →</button>
+    <button class="btn-main btn-pagar" onclick="irScreen2()" ontouchend="irScreen2(); event.preventDefault();" id="btnSiguiente1">Continuar →</button>
     <div class="error-msg" id="err1">Por favor ingresá tu nombre</div>
   </div>
 
@@ -224,11 +224,23 @@ function showScreen(n){
 function irScreen1(){ showScreen(1); }
 
 function irScreen2(){
-  nombre = document.getElementById('inputNombre').value.trim();
-  if(!nombre){ show('err1'); return; }
-  hide('err1');
-  document.getElementById('labelNombre').textContent = nombre;
-  showScreen(2);
+  try {
+    nombre = document.getElementById('inputNombre').value.trim();
+    if(!nombre){ show('err1'); return; }
+    hide('err1');
+    const labelEl = document.getElementById('labelNombre');
+    if(labelEl) labelEl.textContent = nombre;
+    showScreen(2);
+    // Reset moneda selection
+    monedaActual = null;
+    document.querySelectorAll('.mon-btn').forEach(b => b.className='mon-btn');
+    document.getElementById('tcRow').className = 'tc-row hide';
+    document.getElementById('inputMonto').value = '';
+    document.getElementById('preview').style.display = 'none';
+    hide('err2');
+  } catch(e) {
+    console.error('Error en irScreen2:', e);
+  }
 }
 
 function irScreen3(){
@@ -419,6 +431,7 @@ function f2(n){ return (parseFloat(n)||0).toLocaleString('es-AR',{minimumFractio
 
 // Enter key navigation
 document.getElementById('inputNombre').addEventListener('keypress', e => { if(e.key==='Enter') irScreen2(); });
+document.getElementById('inputNombre').addEventListener('keydown', e => { if(e.key==='Enter') irScreen2(); });
 </script>
 
 
