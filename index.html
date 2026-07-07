@@ -347,182 +347,241 @@ tbody td{padding:6px 8px;vertical-align:middle}
 
 <!-- MODAL CIERRE -->
 <div class="mo" id="moCierre">
-  <div class="md">
-    <div class="ci-head">
-      <div class="ci-tit">📋 Cierre — <span id="cFecha" style="color:var(--acc)"></span></div>
-      <div class="ci-sub" id="cSub"></div>
-    </div>
-    <div class="ci-saldos">
-      <div class="ci-box">
-        <div class="ci-box-t">💵 Caja ARS</div>
-        <div class="ci-row"><span class="ci-l">Saldo inicial</span><span class="ci-v ca" id="c_siA">$0,00</span></div>
-        <div class="ci-row"><span class="ci-l">▲ Ingresos</span><span class="ci-v cg" id="c_iA">$0,00</span></div>
-        <div class="ci-row"><span class="ci-l">▼ Egresos</span><span class="ci-v cr" id="c_eA">$0,00</span></div>
-        <div class="ci-row ci-final"><span class="ci-l" style="color:var(--txt);font-weight:700">Saldo final</span><span class="ci-v sa" style="font-size:16px" id="c_sfA">$0,00</span></div>
+  <div class="md" style="width:900px;max-width:98%">
+
+    <!-- HEADER -->
+    <div style="padding:20px 24px 14px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:20px;font-weight:900">📋 Cierre de Caja</div>
+        <div style="font-size:12px;color:var(--mut);margin-top:3px" id="cFecha"></div>
+        <div style="font-size:11px;color:var(--mut)" id="cSub"></div>
       </div>
-      <div class="ci-box">
-        <div class="ci-box-t">💵 Caja USD</div>
-        <div class="ci-row"><span class="ci-l">Saldo inicial</span><span class="ci-v cu" id="c_siU">u$0,00</span></div>
-        <div class="ci-row"><span class="ci-l">▲ Ingresos</span><span class="ci-v cg" id="c_iU">u$0,00</span></div>
-        <div class="ci-row"><span class="ci-l">▼ Egresos</span><span class="ci-v cr" id="c_eU">u$0,00</span></div>
-        <div class="ci-row ci-final"><span class="ci-l" style="color:var(--txt);font-weight:700">Saldo final</span><span class="ci-v su" style="font-size:16px" id="c_sfU">u$0,00</span></div>
-      </div>
-    </div>
-    <div class="ci-cats"><div class="ci-sec">Por categoría</div><div class="ci-cats-grid" id="ciCats"></div></div>
-    <div class="ci-movs">
-      <div class="ci-sec">Detalle completo</div>
-      <table class="ci-tbl">
-        <thead><tr><th>#</th><th>Hora</th><th>Op.</th><th>Tipo</th><th>Descripción</th><th>Monto</th><th>Ing.ARS</th><th>Egr.ARS</th><th>Saldo ARS</th><th>Ing.USD</th><th>Egr.USD</th><th>Saldo USD</th><th>✓</th></tr></thead>
-        <tbody id="ciTbody"></tbody>
-      </table>
+      <button onclick="closeCierre()" style="background:none;border:none;color:var(--mut);font-size:20px;cursor:pointer">✕</button>
     </div>
 
-    <!-- ARQUEO DE CAJA -->
-    <div class="ci-arqueo">
-      <div class="ci-sec">💵 Arqueo de Caja — Conteo físico de billetes</div>
-      <div class="arqueo-grid">
-        <!-- ARS -->
-        <div class="arqueo-col">
-          <div class="arqueo-col-title" style="color:var(--ars)">$ Pesos Argentinos</div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--ars)">$10</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bARS10" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sARS10">= $0</span>
+    <div style="overflow-y:auto;max-height:85vh;padding:0">
+
+      <!-- 1. RESUMEN DE SALDOS -->
+      <div style="padding:16px 24px;border-bottom:1px solid var(--br);background:var(--sf3)">
+        <div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px">1. Resumen del día</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;border-left:3px solid var(--mut)">
+            <div style="font-size:10px;color:var(--mut);margin-bottom:4px;font-weight:700">Saldo inicial ARS</div>
+            <div style="font-size:18px;font-weight:900;color:var(--ars)" id="c_siA">$0,00</div>
           </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--ars)">$20</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bARS20" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sARS20">= $0</span>
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;border-left:3px solid var(--grn)">
+            <div style="font-size:10px;color:var(--mut);margin-bottom:4px;font-weight:700">▲ Ingresos ARS</div>
+            <div style="font-size:18px;font-weight:900;color:var(--grn)" id="c_iA">$0,00</div>
           </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--ars)">$50</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bARS50" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sARS50">= $0</span>
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;border-left:3px solid var(--red)">
+            <div style="font-size:10px;color:var(--mut);margin-bottom:4px;font-weight:700">▼ Egresos ARS</div>
+            <div style="font-size:18px;font-weight:900;color:var(--red)" id="c_eA">$0,00</div>
           </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--ars)">$100</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bARS100" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sARS100">= $0</span>
-          </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--ars)">$200</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bARS200" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sARS200">= $0</span>
-          </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--ars)">$500</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bARS500" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sARS500">= $0</span>
-          </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--ars)">$1.000</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bARS1000" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sARS1000">= $0</span>
-          </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--ars)">$2.000</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bARS2000" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sARS2000">= $0</span>
-          </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--ars)">$10.000</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bARS10000" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sARS10000">= $0</span>
-          </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--ars)">$20.000</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bARS20000" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sARS20000">= $0</span>
-          </div>
-          <div class="arqueo-total-row">
-            <span class="arqueo-total-lbl" style="color:var(--ars)">Total contado ARS</span>
-            <span class="arqueo-total-val" style="color:var(--ars)" id="totalArqueoARS">$0,00</span>
-          </div>
-          <div class="arqueo-diferencia arqueo-dif-ok" id="difARS">
-            <div>
-              <div class="arqueo-dif-lbl">Diferencia ARS</div>
-              <div style="font-size:10px;color:var(--mut)" id="difARSlbl">Sistema vs Físico</div>
-            </div>
-            <span class="arqueo-dif-val" id="difARSval" style="color:var(--grn)">$0,00</span>
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;border-left:3px solid var(--ars)">
+            <div style="font-size:10px;color:var(--mut);margin-bottom:4px;font-weight:700">Saldo final ARS</div>
+            <div style="font-size:22px;font-weight:900;color:var(--ars)" id="c_sfA">$0,00</div>
           </div>
         </div>
-
-        <!-- USD -->
-        <div class="arqueo-col">
-          <div class="arqueo-col-title" style="color:var(--usd)">u$ Dólares</div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--usd)">u$1</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bUSD1" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sUSD1">= u$0</span>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px">
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;border-left:3px solid var(--mut)">
+            <div style="font-size:10px;color:var(--mut);margin-bottom:4px;font-weight:700">Saldo inicial USD</div>
+            <div style="font-size:18px;font-weight:900;color:var(--usd)" id="c_siU">u$0,00</div>
           </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--usd)">u$5</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bUSD5" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sUSD5">= u$0</span>
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;border-left:3px solid var(--grn)">
+            <div style="font-size:10px;color:var(--mut);margin-bottom:4px;font-weight:700">▲ Ingresos USD</div>
+            <div style="font-size:18px;font-weight:900;color:var(--grn)" id="c_iU">u$0,00</div>
           </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--usd)">u$10</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bUSD10" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sUSD10">= u$0</span>
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;border-left:3px solid var(--red)">
+            <div style="font-size:10px;color:var(--mut);margin-bottom:4px;font-weight:700">▼ Egresos USD</div>
+            <div style="font-size:18px;font-weight:900;color:var(--red)" id="c_eU">u$0,00</div>
           </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--usd)">u$20</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bUSD20" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sUSD20">= u$0</span>
-          </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--usd)">u$50</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bUSD50" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sUSD50">= u$0</span>
-          </div>
-          <div class="arqueo-row">
-            <span class="arqueo-denom" style="color:var(--usd)">u$100</span>
-            <span class="arqueo-x">×</span>
-            <input class="arqueo-input" type="number" min="0" value="0" id="bUSD100" oninput="calcArqueo()">
-            <span class="arqueo-subtotal" id="sUSD100">= u$0</span>
-          </div>
-          <div class="arqueo-total-row">
-            <span class="arqueo-total-lbl" style="color:var(--usd)">Total contado USD</span>
-            <span class="arqueo-total-val" style="color:var(--usd)" id="totalArqueoUSD">u$0,00</span>
-          </div>
-          <div class="arqueo-diferencia arqueo-dif-ok" id="difUSD">
-            <div>
-              <div class="arqueo-dif-lbl">Diferencia USD</div>
-              <div style="font-size:10px;color:var(--mut)" id="difUSDlbl">Sistema vs Físico</div>
-            </div>
-            <span class="arqueo-dif-val" id="difUSDval" style="color:var(--grn)">u$0,00</span>
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;border-left:3px solid var(--usd)">
+            <div style="font-size:10px;color:var(--mut);margin-bottom:4px;font-weight:700">Saldo final USD</div>
+            <div style="font-size:22px;font-weight:900;color:var(--usd)" id="c_sfU">u$0,00</div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="ci-ticket">
-      <div class="ci-sec">📱 Ticket WhatsApp</div>
-      <div class="ticket-preview" id="ticketPreview"></div>
-      <div class="ticket-btns">
-        <button class="btn-wa" onclick="compartirWA()">📲 WhatsApp</button>
-        <button class="btn-copy" onclick="copiarTicket()">📋 Copiar</button>
+
+      <!-- 2. TOTALES POR CATEGORIA -->
+      <div style="padding:16px 24px;border-bottom:1px solid var(--br)">
+        <div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px">2. Totales por categoría</div>
+        <div id="ciCats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
       </div>
-    </div>
-    <div class="ci-foot">
-      <button class="btn-impr" onclick="window.print()">🖨 Imprimir</button>
-      <button class="btn-cerrar-dia" id="btnCerrarDia" onclick="cerrarDia()">✓ Cerrar día</button>
-      <button id="btnAnularCierre" onclick="anularCierre()" style="display:none;padding:8px 16px;border-radius:6px;border:1px solid var(--orn);background:rgba(245,158,11,.1);color:var(--orn);font-size:12px;font-weight:800;cursor:pointer">↩ Anular cierre</button>
-      <button class="btn-mc" onclick="closeCierre()">Cerrar</button>
+
+      <!-- 3. MOVIMIENTOS DEL DIA -->
+      <div style="padding:16px 24px;border-bottom:1px solid var(--br)">
+        <div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px">3. Movimientos del día</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead>
+            <tr style="background:var(--sf3)">
+              <th style="padding:7px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">#</th>
+              <th style="padding:7px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Hora</th>
+              <th style="padding:7px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Op.</th>
+              <th style="padding:7px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Tipo</th>
+              <th style="padding:7px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Descripción</th>
+              <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Monto</th>
+              <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Ing.ARS</th>
+              <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Egr.ARS</th>
+              <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Saldo ARS</th>
+              <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Ing.USD</th>
+              <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Egr.USD</th>
+              <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Saldo USD</th>
+              <th style="padding:7px 8px;text-align:center;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">✓</th>
+            </tr>
+          </thead>
+          <tbody id="ciTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- 4. ARQUEO DE CAJA -->
+      <div style="padding:16px 24px;border-bottom:1px solid var(--br)">
+        <div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px">4. Arqueo físico de billetes</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+          <!-- ARS -->
+          <div style="background:var(--sf2);border-radius:10px;padding:16px">
+            <div style="font-size:12px;font-weight:900;color:var(--ars);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--br)">💵 Pesos Argentinos</div>
+            <div style="display:grid;grid-template-columns:auto 1fr auto auto;gap:6px 8px;align-items:center">
+              <span style="font-size:11px;color:var(--mut);font-weight:700">Billete</span>
+              <span style="font-size:11px;color:var(--mut)">Cantidad</span>
+              <span style="font-size:11px;color:var(--mut)"></span>
+              <span style="font-size:11px;color:var(--mut);text-align:right">Subtotal</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--ars)">$10</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bARS10" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sARS10">$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--ars)">$20</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bARS20" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sARS20">$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--ars)">$50</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bARS50" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sARS50">$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--ars)">$100</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bARS100" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sARS100">$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--ars)">$200</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bARS200" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sARS200">$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--ars)">$500</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bARS500" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sARS500">$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--ars)">$1.000</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bARS1000" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sARS1000">$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--ars)">$2.000</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bARS2000" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sARS2000">$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--ars)">$10.000</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bARS10000" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sARS10000">$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--ars)">$20.000</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bARS20000" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sARS20000">$0</span>
+            </div>
+            <div style="margin-top:12px;padding-top:12px;border-top:2px solid var(--br);display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;font-weight:900;color:var(--ars)">Total contado ARS</span>
+              <span style="font-size:20px;font-weight:900;color:var(--ars)" id="totalArqueoARS">$0,00</span>
+            </div>
+            <div id="difARS" style="margin-top:8px;padding:10px;border-radius:7px;display:flex;justify-content:space-between;align-items:center;background:rgba(16,185,129,.08);border:1px solid var(--grn)">
+              <div>
+                <div style="font-size:11px;font-weight:800" id="difARSlbl">✓ Caja exacta</div>
+                <div style="font-size:10px;color:var(--mut)">Sistema: <span id="difARSsistema">$0,00</span></div>
+              </div>
+              <span style="font-size:16px;font-weight:900;color:var(--grn)" id="difARSval">$0,00</span>
+            </div>
+          </div>
+
+          <!-- USD -->
+          <div style="background:var(--sf2);border-radius:10px;padding:16px">
+            <div style="font-size:12px;font-weight:900;color:var(--usd);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--br)">💵 Dólares</div>
+            <div style="display:grid;grid-template-columns:auto 1fr auto auto;gap:6px 8px;align-items:center">
+              <span style="font-size:11px;color:var(--mut);font-weight:700">Billete</span>
+              <span style="font-size:11px;color:var(--mut)">Cantidad</span>
+              <span style="font-size:11px;color:var(--mut)"></span>
+              <span style="font-size:11px;color:var(--mut);text-align:right">Subtotal</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--usd)">u$1</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bUSD1" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sUSD1">u$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--usd)">u$5</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bUSD5" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sUSD5">u$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--usd)">u$10</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bUSD10" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sUSD10">u$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--usd)">u$20</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bUSD20" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sUSD20">u$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--usd)">u$50</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bUSD50" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sUSD50">u$0</span>
+
+              <span style="font-size:12px;font-weight:800;color:var(--usd)">u$100</span>
+              <input class="arqueo-input" type="number" min="0" value="0" id="bUSD100" oninput="calcArqueo()" style="width:70px">
+              <span style="color:var(--mut);font-size:11px">×</span>
+              <span style="font-size:11px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums" id="sUSD100">u$0</span>
+            </div>
+            <div style="margin-top:12px;padding-top:12px;border-top:2px solid var(--br);display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;font-weight:900;color:var(--usd)">Total contado USD</span>
+              <span style="font-size:20px;font-weight:900;color:var(--usd)" id="totalArqueoUSD">u$0,00</span>
+            </div>
+            <div id="difUSD" style="margin-top:8px;padding:10px;border-radius:7px;display:flex;justify-content:space-between;align-items:center;background:rgba(16,185,129,.08);border:1px solid var(--grn)">
+              <div>
+                <div style="font-size:11px;font-weight:800" id="difUSDlbl">✓ Caja exacta</div>
+                <div style="font-size:10px;color:var(--mut)">Sistema: <span id="difUSDsistema">u$0,00</span></div>
+              </div>
+              <span style="font-size:16px;font-weight:900;color:var(--grn)" id="difUSDval">u$0,00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. TICKET WHATSAPP -->
+      <div style="padding:16px 24px;border-bottom:1px solid var(--br)">
+        <div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">5. Ticket WhatsApp</div>
+        <div style="background:var(--sf2);border:1px solid var(--br);border-radius:8px;padding:12px 14px;font-family:monospace;font-size:11px;color:var(--txt);white-space:pre-wrap;line-height:1.6;max-height:180px;overflow-y:auto" id="ticketPreview"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="compartirWA()" style="padding:9px 18px;border-radius:7px;border:none;background:#25d366;color:#fff;font-size:12px;font-weight:800;cursor:pointer">📲 WhatsApp</button>
+          <button onclick="copiarTicket()" style="padding:9px 16px;border-radius:7px;border:1px solid var(--br);background:var(--sf2);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer">📋 Copiar</button>
+        </div>
+      </div>
+
+      <!-- FOOTER BOTONES -->
+      <div style="padding:14px 24px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+        <button onclick="window.print()" style="padding:8px 16px;border-radius:6px;border:1px solid var(--br);background:var(--sf2);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer">🖨 Imprimir</button>
+        <button id="btnCerrarDia" onclick="cerrarDia()" style="padding:8px 16px;border-radius:6px;border:none;background:var(--grn);color:#fff;font-size:12px;font-weight:800;cursor:pointer">✓ Cerrar día</button>
+        <button id="btnAnularCierre" onclick="anularCierre()" style="display:none;padding:8px 16px;border-radius:6px;border:1px solid var(--orn);background:rgba(245,158,11,.1);color:var(--orn);font-size:12px;font-weight:800;cursor:pointer">↩ Anular cierre</button>
+        <button onclick="closeCierre()" style="padding:8px 16px;border-radius:6px;border:1px solid var(--br);background:var(--sf2);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer">Cerrar</button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1071,23 +1130,28 @@ function showCierre(){
     {k:'LOGISTICA',lbl:'Logística',ic:'🚛',col:'#ec4899',bc:'#ec4899'},
   ];
   let cH='';
-  TIPOS.forEach(t=>{
-    const ms=movs.filter(m=>m.tipo===t.k); if(!ms.length) return;
-    const tIA2=ms.reduce((s,m)=>s+m.iA,0),tEA2=ms.reduce((s,m)=>s+m.eA,0);
-    const tIU2=ms.reduce((s,m)=>s+m.iU,0),tEU2=ms.reduce((s,m)=>s+m.eU,0);
-    const nA=tIA2-tEA2,nU=tIU2-tEU2;
-    cH+=`<div class="ci-cat" style="border-left-color:${t.bc}">
-      <div class="ci-cat-h" style="color:${t.col}">${t.ic} ${t.lbl} (${ms.length})</div>
-      ${tIA2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▲ ARS</span><span class="ci-cat-v cg">$${f0(tIA2)}</span></div>`:''}
-      ${tEA2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▼ ARS</span><span class="ci-cat-v cr">$${f0(tEA2)}</span></div>`:''}
-      ${tIU2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▲ USD</span><span class="ci-cat-v cg">u$${f2(tIU2)}</span></div>`:''}
-      ${tEU2>0?`<div class="ci-cat-r"><span class="ci-cat-l">▼ USD</span><span class="ci-cat-v cr">u$${f2(tEU2)}</span></div>`:''}
-      <div class="ci-cat-r" style="border-top:1px solid var(--br);margin-top:3px;padding-top:4px">
-        <span class="ci-cat-l" style="font-weight:700">Neto</span>
-        <span style="color:${t.col};font-weight:700;font-size:11px">${nA!==0?(nA>0?'+':'')+`$${f0(Math.abs(nA))}`:''}${nU!==0?(nA!==0?' / ':'')+`${nU>0?'+':''}u$${f2(Math.abs(nU))}`:''}
-        </span>
-      </div>
-    </div>`;
+  TIPOS.forEach(function(t){
+    const ms=movs.filter(function(m){return m.tipo===t.k;}); if(!ms.length) return;
+    const tIA2=ms.reduce(function(s,m){return s+m.iA;},0);
+    const tEA2=ms.reduce(function(s,m){return s+m.eA;},0);
+    const tIU2=ms.reduce(function(s,m){return s+m.iU;},0);
+    const tEU2=ms.reduce(function(s,m){return s+m.eU;},0);
+    const nA=tIA2-tEA2, nU=tIU2-tEU2;
+    const netoColor = nA>=0 ? 'var(--grn)' : 'var(--red)';
+    cH+='<div style="background:var(--sf2);border-radius:8px;padding:12px;border-left:4px solid '+t.bc+'">'+
+      '<div style="font-size:11px;font-weight:900;color:'+t.col+';margin-bottom:8px">'+t.ic+' '+t.lbl+' <span style="color:var(--mut);font-weight:400">('+ms.length+' mov.)</span></div>'+
+      (tIA2>0?'<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0"><span style="color:var(--mut)">▲ Ingreso ARS</span><span style="color:var(--grn);font-weight:800">$'+f0(tIA2)+'</span></div>':'')+
+      (tEA2>0?'<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0"><span style="color:var(--mut)">▼ Egreso ARS</span><span style="color:var(--red);font-weight:800">$'+f0(tEA2)+'</span></div>':'')+
+      (tIU2>0?'<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0"><span style="color:var(--mut)">▲ Ingreso USD</span><span style="color:var(--grn);font-weight:800">u$'+f2(tIU2)+'</span></div>':'')+
+      (tEU2>0?'<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0"><span style="color:var(--mut)">▼ Egreso USD</span><span style="color:var(--red);font-weight:800">u$'+f2(tEU2)+'</span></div>':'')+
+      '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--br);display:flex;justify-content:space-between;align-items:center">'+
+        '<span style="font-size:11px;font-weight:800;color:var(--txt)">Neto</span>'+
+        '<span style="font-size:13px;font-weight:900;color:'+netoColor+'">'+
+          (nA!==0?'$'+f0(Math.abs(nA))+' '+(nA>0?'▲':'▼'):'')+(nA!==0&&nU!==0?' / ':'')+
+          (nU!==0?'u$'+f2(Math.abs(nU))+' '+(nU>0?'▲':'▼'):'')+(nA===0&&nU===0?'—':'')
+        +'</span>'+
+      '</div>'+
+    '</div>';
   });
   document.getElementById('ciCats').innerHTML=cH||'<span style="color:var(--mut)">Sin movimientos</span>';
   document.getElementById('ciTbody').innerHTML=movs.map((m,i)=>{
@@ -1192,19 +1256,25 @@ function calcArqueo(){
 
   // Diferencias ARS
   const difA = sARS - totalARS;
-  const elDifARS = document.getElementById('difARS');
-  document.getElementById('difARSval').textContent = (difA>=0?'+':'') + '$'+f0(Math.abs(difA));
-  document.getElementById('difARSlbl').textContent = difA===0 ? '✓ Caja exacta' : difA>0 ? 'Falta en caja física' : 'Sobra en caja física';
+  document.getElementById('difARSval').textContent = (difA===0?'✓ Exacto':(difA>0?'FALTA ':'SOBRA ')+'$'+f0(Math.abs(difA)));
   document.getElementById('difARSval').style.color = difA===0 ? 'var(--grn)' : 'var(--red)';
-  elDifARS.className = 'arqueo-diferencia ' + (difA===0?'arqueo-dif-ok':'arqueo-dif-err');
+  document.getElementById('difARSlbl').textContent = difA===0 ? '✓ Caja exacta' : difA>0 ? '⚠ Falta en caja física' : '⚠ Sobra en caja física';
+  document.getElementById('difARSlbl').style.color = difA===0 ? 'var(--grn)' : 'var(--red)';
+  document.getElementById('difARSsistema').textContent = '$'+f0(sARS);
+  const elDifARS = document.getElementById('difARS');
+  elDifARS.style.background = difA===0 ? 'rgba(16,185,129,.08)' : 'rgba(239,68,68,.08)';
+  elDifARS.style.border = '1px solid '+(difA===0?'var(--grn)':'var(--red)');
 
   // Diferencias USD
   const difU = sUSD - totalUSD;
-  const elDifUSD = document.getElementById('difUSD');
-  document.getElementById('difUSDval').textContent = (difU>=0?'+':'') + 'u$'+f2(Math.abs(difU));
-  document.getElementById('difUSDlbl').textContent = difU===0 ? '✓ Caja exacta' : difU>0 ? 'Falta en caja física' : 'Sobra en caja física';
+  document.getElementById('difUSDval').textContent = (difU===0?'✓ Exacto':(difU>0?'FALTA ':'SOBRA ')+'u$'+f2(Math.abs(difU)));
   document.getElementById('difUSDval').style.color = difU===0 ? 'var(--usd)' : 'var(--red)';
-  elDifUSD.className = 'arqueo-diferencia ' + (difU===0?'arqueo-dif-ok':'arqueo-dif-err');
+  document.getElementById('difUSDlbl').textContent = difU===0 ? '✓ Caja exacta' : difU>0 ? '⚠ Falta en caja física' : '⚠ Sobra en caja física';
+  document.getElementById('difUSDlbl').style.color = difU===0 ? 'var(--usd)' : 'var(--red)';
+  document.getElementById('difUSDsistema').textContent = 'u$'+f2(sUSD);
+  const elDifUSD = document.getElementById('difUSD');
+  elDifUSD.style.background = difU===0 ? 'rgba(16,185,129,.08)' : 'rgba(239,68,68,.08)';
+  elDifUSD.style.border = '1px solid '+(difU===0?'var(--usd)':'var(--red)');
 }
 
 function resetArqueo(){
