@@ -706,7 +706,35 @@ function showCierre(){
   tkt+='  ▲ Ingresos:   u$'+f2(tIU)+'\n';
   tkt+='  ▼ Egresos:    u$'+f2(tEU)+'\n';
   tkt+='  Saldo final:  u$'+f2(sUSD)+'\n\n';
-  tkt+='━━━━━━━━━━━━━━━━━━━━━━━━\n📝 MOVIMIENTOS ('+movs.length+' | ✓'+verif+')\n';
+  // Resumen por categoría para ticket
+  const CATS=[
+    {k:'COBRO',l:'Cobros',ic:'💰'},
+    {k:'PAGO',l:'Pagos',ic:'💸'},
+    {k:'DIVISA',l:'Compra divisas',ic:'💱'},
+    {k:'RETIRO',l:'Retiros socios',ic:'🏦'},
+    {k:'GASTO',l:'Gastos',ic:'🧾'},
+    {k:'HABER',l:'Haberes',ic:'👤'},
+    {k:'LOGISTICA',l:'Logística',ic:'🚛'},
+  ];
+  tkt+='━━━━━━━━━━━━━━━━━━━━━━━━\n📊 RESUMEN POR CATEGORÍA\n';
+  CATS.forEach(function(cat){
+    const ms=movs.filter(function(m){return m.tipo===cat.k;});
+    if(!ms.length) return;
+    const ia=ms.reduce(function(s,m){return s+m.iA;},0);
+    const ea=ms.reduce(function(s,m){return s+m.eA;},0);
+    const iu=ms.reduce(function(s,m){return s+m.iU;},0);
+    const eu=ms.reduce(function(s,m){return s+m.eU;},0);
+    tkt+=cat.ic+' '+cat.l+' ('+ms.length+' mov.)\n';
+    if(ia>0) tkt+='   ▲ ARS:  $'+f0(ia)+'\n';
+    if(ea>0) tkt+='   ▼ ARS:  $'+f0(ea)+'\n';
+    if(iu>0) tkt+='   ▲ USD:  u$'+f2(iu)+'\n';
+    if(eu>0) tkt+='   ▼ USD:  u$'+f2(eu)+'\n';
+    const nA=ia-ea, nU=iu-eu;
+    const netoA=nA!==0?'$'+f0(Math.abs(nA))+(nA>0?' ▲':' ▼'):'';
+    const netoU=nU!==0?'u$'+f2(Math.abs(nU))+(nU>0?' ▲':' ▼'):'';
+    tkt+='   Neto: '+(netoA+(netoA&&netoU?' | ':'')+netoU||'—')+'\n';
+  });
+  tkt+='\n━━━━━━━━━━━━━━━━━━━━━━━━\n📝 MOVIMIENTOS ('+movs.length+' | ✓'+verif+')\n';
   movs.forEach(function(m){
     const s=m.tipo==='DIVISA'?'u$'+f2(m.monto):m.moneda==='ARS'?'$'+f0(m.monto):'u$'+f2(m.monto);
     tkt+='  '+(m.ok?'✓':'○')+' '+m.hora+' ['+m.tipo+'] '+m.desc+' — '+s+'\n';
