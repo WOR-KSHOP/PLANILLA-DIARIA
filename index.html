@@ -126,6 +126,18 @@ tbody td{padding:6px 8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--br);border-radius:3px}
+@media print{
+  header,.tab-nav,.date-nav,.ro-bar,.sbar,.search-bar,.fp,.tw .acts,
+  #toast,.loading,button:not(.print-ignore){display:none!important}
+  .mo{position:static!important;background:none!important;padding:0!important;display:block!important}
+  .md{border:none!important;box-shadow:none!important;width:100%!important;max-width:100%!important}
+  #cierreBody{max-height:none!important;overflow:visible!important}
+  body{background:#fff!important;color:#000!important}
+  :root{--bg:#fff;--sf:#f9f9f9;--sf2:#f0f0f0;--br:#ddd;--txt:#000;--mut:#666;
+    --grn:#007a3d;--red:#c0392b;--ars:#b8860b;--usd:#006400;--usdt:#4b0082;--acc:#1a5276}
+  .md *{color-adjust:exact;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{margin:1cm;size:A4}
+}
 </style>
 </head>
 <body>
@@ -815,11 +827,24 @@ function calcArqueo(){
   if(totA>0||totU>0){
     const dAs=dA===0?'✓ Exacto':(dA>0?'FALTA ':'SOBRA ')+'$'+f0(Math.abs(dA));
     const dUs=dU===0?'✓ Exacto':(dU>0?'FALTA ':'SOBRA ')+'u$'+f2(Math.abs(dU));
-    const tktArqueo=window._tkt+'\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n💵 ARQUEO FÍSICO\n  Contado ARS: $'+f0(totA)+'\n  Diferencia: '+dAs+'\n  Contado USD: u$'+f2(totU)+'\n  Diferencia: '+dUs;
-    const tp=document.getElementById('tktPrev');
-    if(tp) tp.textContent=tktArqueo;
-    window._tktFinal=tktArqueo;
-  }
+  // Detalle de billetes para ticket
+  const bARS=[10,20,50,100,200,500,1000,2000,10000,20000];
+  const bUSD=[1,5,10,20,50,100];
+  let detARS='', detUSD='';
+  bARS.forEach(function(d){
+    const el=document.getElementById('bARS'+d);
+    const c=el?parseInt(el.value)||0:0;
+    if(c>0) detARS+='    $'+d.toLocaleString('es-AR')+' x '+c+' = $'+(c*d).toLocaleString('es-AR')+'\n';
+  });
+  bUSD.forEach(function(d){
+    const el=document.getElementById('bUSD'+d);
+    const c=el?parseInt(el.value)||0:0;
+    if(c>0) detUSD+='    u$'+d+' x '+c+' = u$'+(c*d).toLocaleString('es-AR')+'\n';
+  });
+  const arqueoTxt='\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n💵 ARQUEO FISICO\n\n$ Pesos:\n'+(detARS||'    sin billetes contados\n')+'  Total: $'+f0(totA)+'  Sistema: $'+f0(sARS)+'  Dif: '+dAs+'\n\nu$ Dolares:\n'+(detUSD||'    sin billetes contados\n')+'  Total: u$'+f2(totU)+'  Sistema: u$'+f2(sUSD)+'  Dif: '+dUs;
+  window._tktFinal=window._tkt+arqueoTxt;
+  const tp=document.getElementById('tktPrev');
+  if(tp) tp.textContent=window._tktFinal;
 }
 
 async function cerrarDia(){
@@ -1058,6 +1083,7 @@ async function rechazar(i){
   if(!confirm('¿Rechazar el pago de '+pendMovs[i].descripcion+'?')) return;
   await dbDelete('movimientos',pendMovs[i].id);
   toast('Rechazado'); checkPend(); renderPend();
+}
 }
 </script>
 </body>
