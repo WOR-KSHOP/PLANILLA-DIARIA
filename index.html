@@ -627,16 +627,26 @@ function showCierre(){
     const iu=ms.reduce(function(s,m){return s+m.iU;},0);
     const eu=ms.reduce(function(s,m){return s+m.eU;},0);
     const nA=ia-ea, nU=iu-eu;
-    cats+='<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:4px solid '+t.b+'">'+
-      '<div style="font-size:11px;font-weight:900;color:'+t.c+';margin-bottom:8px">'+t.ic+' '+t.l+' ('+ms.length+')</div>'+
-      (ia>0?'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0"><span style="color:var(--mut)">▲ ARS</span><span style="color:var(--grn);font-weight:800">$'+f0(ia)+'</span></div>':'')+
-      (ea>0?'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0"><span style="color:var(--mut)">▼ ARS</span><span style="color:var(--red);font-weight:800">$'+f0(ea)+'</span></div>':'')+
-      (iu>0?'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0"><span style="color:var(--mut)">▲ USD</span><span style="color:var(--grn);font-weight:800">u$'+f2(iu)+'</span></div>':'')+
-      (eu>0?'<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0"><span style="color:var(--mut)">▼ USD</span><span style="color:var(--red);font-weight:800">u$'+f2(eu)+'</span></div>':'')+
-      '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--br);display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:800">Neto</span><span style="font-size:12px;font-weight:900;color:'+(nA>=0?'var(--grn)':'var(--red)')+'">'+
-      (nA!==0?'$'+f0(Math.abs(nA))+(nA>0?' ▲':' ▼'):'')+(nA!==0&&nU!==0?' / ':'')+
-      (nU!==0?'u$'+f2(Math.abs(nU))+(nU>0?' ▲':' ▼'):'')+
-      (nA===0&&nU===0?'—':'')+'</span></div></div>';
+    const nCol=nA>=0?'var(--grn)':'var(--red)';
+    cats+='<div style="background:var(--sf);border-radius:8px;padding:14px;border-left:4px solid '+t.b+'">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
+        '<div style="font-size:12px;font-weight:900;color:'+t.c+'">'+t.ic+' '+t.l+'</div>'+
+        '<div style="font-size:10px;color:var(--mut);background:var(--sf2);border-radius:4px;padding:2px 7px;font-weight:700">'+ms.length+' mov.</div>'+
+      '</div>'+
+      (ia>0?'<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(46,51,80,.3)"><span style="color:var(--mut)">▲ Ingreso ARS</span><span style="color:var(--grn);font-weight:800;font-size:13px">$'+f0(ia)+'</span></div>':'')+
+      (ea>0?'<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(46,51,80,.3)"><span style="color:var(--mut)">▼ Egreso ARS</span><span style="color:var(--red);font-weight:800;font-size:13px">$'+f0(ea)+'</span></div>':'')+
+      (iu>0?'<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(46,51,80,.3)"><span style="color:var(--mut)">▲ Ingreso USD</span><span style="color:var(--grn);font-weight:800;font-size:13px">u$'+f2(iu)+'</span></div>':'')+
+      (eu>0?'<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(46,51,80,.3)"><span style="color:var(--mut)">▼ Egreso USD</span><span style="color:var(--red);font-weight:800;font-size:13px">u$'+f2(eu)+'</span></div>':'')+
+      '<div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">'+
+        '<span style="font-size:11px;font-weight:800;color:var(--txt)">Neto</span>'+
+        '<span style="font-size:14px;font-weight:900;color:'+nCol+'">'+
+          (nA!==0?(nA>0?'+':'')+' $'+f0(Math.abs(nA)):'')+
+          (nA!==0&&nU!==0?' | ':'')+
+          (nU!==0?(nU>0?'+':'')+' u$'+f2(Math.abs(nU)):'')+
+          (nA===0&&nU===0?'—':'')+
+        '</span>'+
+      '</div>'+
+    '</div>';
   });
   // Movimientos tabla
   const movsTbl=movs.map(function(m,i){
@@ -710,7 +720,13 @@ function showCierre(){
     '</div>'+
     // Categorías
     '<div style="padding:16px 24px;border-bottom:1px solid var(--br)">'+
-      '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">2. Totales por categoría</div>'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
+        '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px">2. Totales por categoría</div>'+
+        '<div style="display:flex;gap:12px">'+
+          '<div style="font-size:11px"><span style="color:var(--grn);font-weight:800">▲ ARS $'+f0(tIA)+'</span> <span style="color:var(--mut)">|</span> <span style="color:var(--red);font-weight:800">▼ ARS $'+f0(tEA)+'</span></div>'+
+          '<div style="font-size:11px"><span style="color:var(--grn);font-weight:800">▲ USD u$'+f2(tIU)+'</span> <span style="color:var(--mut)">|</span> <span style="color:var(--red);font-weight:800">▼ USD u$'+f2(tEU)+'</span></div>'+
+        '</div>'+
+      '</div>'+
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+cats+'</div>'+
     '</div>'+
     // Movimientos
