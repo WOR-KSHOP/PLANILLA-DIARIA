@@ -70,6 +70,7 @@ input::placeholder{color:var(--mut)}
 .tb.ag{border-color:var(--orn);background:rgba(245,158,11,.08);color:var(--orn)}
 .tb.ah{border-color:#60a5fa;background:rgba(96,165,250,.08);color:#60a5fa}
 .tb.al{border-color:#ec4899;background:rgba(236,72,153,.08);color:#ec4899}
+.tb.aj{border-color:#818cf8;background:rgba(129,140,248,.08);color:#818cf8}
 .tog2{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--br);border-radius:6px;overflow:hidden}
 .t2b{padding:7px;text-align:center;font-size:12px;font-weight:800;cursor:pointer;background:var(--sf2);color:var(--mut);border:none;transition:all .14s}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -94,6 +95,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
 .ch-gasto{background:rgba(245,158,11,.1);color:var(--orn)}
 .ch-haber{background:rgba(96,165,250,.1);color:#60a5fa}
 .ch-logistica{background:rgba(236,72,153,.1);color:#ec4899}
+.ch-ajuste{background:rgba(99,102,241,.1);color:#818cf8}
 .n{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
 .cg{color:var(--grn)}.cr{color:var(--red)}.ca{color:var(--ars)}.cu{color:var(--usd)}.cm{color:var(--mut)}
 .acts{display:flex;gap:3px}
@@ -212,6 +214,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
           <button class="tb" onclick="setTipo('GASTO',this)"><span class="ic">🧾</span>Gasto</button>
           <button class="tb" onclick="setTipo('HABER',this)"><span class="ic">👤</span>Haber</button>
           <button class="tb" onclick="setTipo('LOGISTICA',this)" style="grid-column:span 2"><span class="ic">🚛</span>Logística</button>
+          <button class="tb" onclick="setTipo('AJUSTE',this)" style="grid-column:span 2"><span class="ic">⚖️</span>Ajuste / Neteo</button>
         </div>
       </div>
       <div class="fld" id="divInfo" style="display:none"><div style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:8px;font-size:11px;color:var(--ars)">💱 Compra de divisas: ingresá los USD. Los ARS salen según cotización.</div></div>
@@ -455,7 +458,7 @@ function irFecha(v){if(!v)return;const[y,m,d]=v.split('-').map(Number);const n=n
 function setTipo(t,btn){
   tipo=t;
   document.querySelectorAll('.tb').forEach(b=>b.className='tb');
-  const cls={COBRO:'ac',PAGO:'ap',DIVISA:'ad',RETIRO:'ar',GASTO:'ag',HABER:'ah',LOGISTICA:'al'};
+  const cls={COBRO:'ac',PAGO:'ap',DIVISA:'ad',RETIRO:'ar',GASTO:'ag',HABER:'ah',LOGISTICA:'al',AJUSTE:'aj'};
   btn.classList.add(cls[t]);
   const div=t==='DIVISA';
   document.getElementById('divInfo').style.display=div?'block':'none';
@@ -464,6 +467,7 @@ function setTipo(t,btn){
   document.getElementById('mLbl').textContent=div?'Monto USD':'Monto '+(moneda==='ARS'?'ARS':'USD');
   if(t==='COBRO') setDir('ING');
   if(['PAGO','RETIRO','GASTO','HABER','LOGISTICA'].includes(t)) setDir('EGR');
+  if(t==='AJUSTE'){ setDir('ING'); }
   calcPv();
 }
 function setMoneda(m){
@@ -629,6 +633,7 @@ function showCierre(){
     {k:'GASTO',l:'Gastos',ic:'🧾',c:'var(--orn)',b:'#f59e0b'},
     {k:'HABER',l:'Haberes',ic:'👤',c:'#60a5fa',b:'#60a5fa'},
     {k:'LOGISTICA',l:'Logística',ic:'🚛',c:'#ec4899',b:'#ec4899'},
+    {k:'AJUSTE',l:'Ajustes/Neteos',ic:'⚖️',c:'#818cf8',b:'#818cf8'},
   ];
   let cats='';
   TIPOS.forEach(function(t){
