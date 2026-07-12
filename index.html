@@ -929,7 +929,10 @@ async function renderNeo(){
   }).join('');
   document.getElementById('neo-app').innerHTML=
     '<div style="padding:14px 20px;border-bottom:1px solid var(--br);background:var(--sf);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'+
-      '<div><div style="font-size:17px;font-weight:900">🏦 Neo Capital</div><div style="font-size:11px;color:var(--mut)">Transferencias a financiera</div></div>'+
+      '<div style="display:flex;align-items:center;gap:12px">'+
+        '<div><div style="font-size:17px;font-weight:900">🏦 Neo Capital</div><div style="font-size:11px;color:var(--mut)">Transferencias a financiera</div></div>'+
+        '<button onclick="showNeoCierre()" style="padding:7px 14px;border-radius:7px;border:1px solid var(--grn);background:rgba(16,185,129,.08);color:var(--grn);font-size:11px;font-weight:800;cursor:pointer">📊 Resumen</button>'+
+      '</div>'+
       '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+
         '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--mut)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo inicial u$</div><div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="color:var(--usd);font-size:11px">u$</span><input type="number" id="neoIniInp" value="'+neoIni+'" step="0.01" onchange="saveNeoIni()" style="background:transparent;border:none;border-bottom:1px dashed var(--br);color:var(--usd);font-size:14px;font-weight:900;width:90px;font-family:var(--fnt)"></div></div>'+
         '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--ars)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Total Pesos</div><div style="font-size:15px;font-weight:900;color:var(--ars)">$'+f0(totP)+'</div></div>'+
@@ -946,7 +949,7 @@ async function renderNeo(){
         '<div style="background:var(--sf2);border:1px solid var(--br);border-radius:8px;padding:12px;text-align:center"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">USD a recibir</div><div style="font-size:26px;font-weight:900;color:var(--usd)" id="nRes">u$0,00</div></div>'+
         '<div style="border-top:1px solid var(--br);padding-top:10px">'+
           '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;margin-bottom:8px">📄 Datos del cupón</div>'+
-          '<div class="fld"><label>Tipo</label><div style="display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--br);border-radius:6px;overflow:hidden"><button id="nBT" onclick="setNeoTipo(\'TRANSFERENCIA\')" style="padding:7px;font-size:11px;font-weight:800;border:none;background:rgba(96,165,250,.1);color:#60a5fa;cursor:pointer">🏦 Transf.</button><button id="nBE" onclick="setNeoTipo(\'EXTRACCION\')" style="padding:7px;font-size:11px;font-weight:800;border:none;background:var(--sf2);color:var(--mut);cursor:pointer">💸 Extracción</button></div></div>'+
+          '<div class="fld"><label>Tipo</label><div style="display:grid;grid-template-columns:1fr 1fr 1fr;border:1.5px solid var(--br);border-radius:6px;overflow:hidden"><button id="nBT" onclick="setNeoTipo(\'TRANSFERENCIA\')" style="padding:7px;font-size:11px;font-weight:800;border:none;background:rgba(96,165,250,.1);color:#60a5fa;cursor:pointer">🏦 Transf.</button><button id="nBE" onclick="setNeoTipo(\'EXTRACCION\')" style="padding:7px;font-size:11px;font-weight:800;border:none;background:var(--sf2);color:var(--mut);cursor:pointer">💸 Extracción</button></div></div>'+
           '<div class="fld"><label>Banco</label><input type="text" id="nBco" placeholder="Galicia, Santander..." style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:13px"></div>'+
           '<div class="r2"><div class="fld"><label>Fecha cupón</label><input type="date" id="nFCup" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:7px 9px;color:var(--txt);font-size:12px"></div><div class="fld"><label>Hora</label><input type="time" id="nHCup" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:7px 9px;color:var(--txt);font-size:12px"></div></div>'+
           '<div class="fld"><label>Emisor</label><input type="text" id="nEm" placeholder="Titular de la transferencia" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:13px"></div>'+
@@ -963,10 +966,17 @@ async function renderNeo(){
 }
 function setNeoTipo(t){
   neoTipo=t;
-  const bt=document.getElementById('nBT'),be=document.getElementById('nBE');
-  if(!bt||!be) return;
-  bt.style.background=t==='TRANSFERENCIA'?'rgba(96,165,250,.1)':'var(--sf2)'; bt.style.color=t==='TRANSFERENCIA'?'#60a5fa':'var(--mut)';
-  be.style.background=t==='EXTRACCION'?'rgba(239,68,68,.1)':'var(--sf2)'; be.style.color=t==='EXTRACCION'?'var(--red)':'var(--mut)';
+  const btns=[
+    {id:'nBT',tipo:'TRANSFERENCIA',bg:'rgba(96,165,250,.1)',col:'#60a5fa'},
+    {id:'nBE',tipo:'EXTRACCION',bg:'rgba(239,68,68,.1)',col:'var(--red)'},
+    {id:'nBA',tipo:'AJUSTE',bg:'rgba(245,158,11,.1)',col:'var(--orn)'},
+  ];
+  btns.forEach(function(b){
+    var el=document.getElementById(b.id);
+    if(!el) return;
+    el.style.background=t===b.tipo?b.bg:'var(--sf2)';
+    el.style.color=t===b.tipo?b.col:'var(--mut)';
+  });
 }
 function calcNeo(){
   const p=parseFloat(document.getElementById('nP')?.value)||0;
@@ -991,6 +1001,52 @@ async function neoReg(){
   const r={fecha,cliente:cli,pesos,tc,usd:pesos/tc,tipo_mov:neoTipo,banco:document.getElementById('nBco')?.value.trim()||null,fecha_cupon:document.getElementById('nFCup')?.value||null,hora_cupon:document.getElementById('nHCup')?.value||null,emisor:document.getElementById('nEm')?.value.trim()||null,observaciones:document.getElementById('nObs')?.value.trim()||null,operadora:op};
   const ok=await dbInsert('neo_capital',r);
   if(ok){toast('✓ Transferencia registrada');renderNeo();}else toast('Error al guardar',0,1);
+}
+
+function closeNeoMo(){var m=document.getElementById('moNeo');if(m)m.classList.remove('show');}
+
+function showNeoCierre(){
+  var totT=neoMovs.filter(function(m){return m.tipo_mov==='TRANSFERENCIA'||!m.tipo_mov;}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  var totE=neoMovs.filter(function(m){return m.tipo_mov==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  var totA=neoMovs.filter(function(m){return m.tipo_mov==='AJUSTE';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  var totP=neoMovs.reduce(function(s,m){return s+(parseFloat(m.pesos)||0);},0);
+  var totU=neoMovs.reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  var clientes={};
+  neoMovs.forEach(function(m){
+    if(!clientes[m.cliente]) clientes[m.cliente]={pesos:0,usd:0,movs:0,op:m.operadora||''};
+    clientes[m.cliente].pesos+=(parseFloat(m.pesos)||0);
+    clientes[m.cliente].usd+=(parseFloat(m.usd)||0);
+    clientes[m.cliente].movs++;
+  });
+  var cliRows=Object.entries(clientes).sort(function(a,b){return b[1].usd-a[1].usd;})
+    .map(function(e){return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)"><td style="padding:7px 12px;font-weight:700">'+e[0]+'</td><td style="padding:7px 12px;color:var(--ars);font-weight:700">$'+f0(e[1].pesos)+'</td><td style="padding:7px 12px;color:var(--usd);font-weight:800">u$'+e[1].usd.toFixed(2)+'</td><td style="padding:7px 12px;color:var(--mut);font-size:11px">'+e[1].movs+' mov.</td></tr>';}).join('');
+  var body='<div style="padding:16px 24px;border-bottom:1px solid var(--br);background:var(--sf2)">'+
+    '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">Resumen acumulado</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'+
+      '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid #60a5fa"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Transferencias</div><div style="font-size:18px;font-weight:900;color:#60a5fa">u$'+totT.toFixed(2)+'</div></div>'+
+      '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--red)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Extracciones</div><div style="font-size:18px;font-weight:900;color:var(--red)">u$'+totE.toFixed(2)+'</div></div>'+
+      '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--orn)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Ajustes/Neteos</div><div style="font-size:18px;font-weight:900;color:var(--orn)">u$'+totA.toFixed(2)+'</div></div>'+
+      '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--grn)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Total USD neto</div><div style="font-size:22px;font-weight:900;color:var(--grn)">u$'+totU.toFixed(2)+'</div></div>'+
+    '</div>'+
+    '<div style="margin-top:10px;background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--ars)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Total Pesos transferidos</div><div style="font-size:18px;font-weight:900;color:var(--ars)">$'+f0(totP)+'</div></div>'+
+  '</div>'+
+  '<div style="padding:16px 24px">'+
+    '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">Por cliente</div>'+
+    '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--sf2)"><th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Cliente</th><th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Pesos</th><th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">USD</th><th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Movs.</th></tr></thead><tbody>'+cliRows+'</tbody></table>'+
+  '</div>'+
+  '<div style="padding:14px 24px;display:flex;justify-content:flex-end">'+
+    '<button onclick="closeNeoMo()" style="padding:8px 16px;border-radius:6px;border:1px solid var(--br);background:var(--sf2);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer">Cerrar</button>'+
+  '</div>';
+  var mo=document.getElementById('moNeo');
+  if(!mo){
+    mo=document.createElement('div');
+    mo.id='moNeo';
+    mo.className='mo';
+    mo.innerHTML='<div class="md" style="width:680px"><div style="padding:18px 24px;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center"><div style="font-size:19px;font-weight:900">📊 Resumen Neo Capital</div><button onclick="closeNeoMo()" style="background:none;border:none;color:var(--mut);font-size:20px;cursor:pointer">✕</button></div><div id="moNeoBody" style="overflow-y:auto;max-height:80vh"></div></div>';
+    document.body.appendChild(mo);
+  }
+  document.getElementById('moNeoBody').innerHTML=body;
+  mo.classList.add('show');
 }
 async function neoElim(i){
   if(!confirm('¿Eliminar?')) return;
