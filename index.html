@@ -1270,6 +1270,132 @@ async function rechazar(i){
   await dbDelete('movimientos',pendMovs[i].id);
   toast('Rechazado'); checkPend(); renderPend();
 }
+
+// ===== PROYECCION =====
+let proyItems=[];
+let _pDir='ING', _pMon='ARS';
+
+function renderProy(){
+  try{ proyItems=JSON.parse(localStorage.getItem('ws_proy')||'[]'); }catch(e){ proyItems=[]; }
+
+  const saldoActARS=sARS;
+  const saldoActUSD=sUSD;
+  let projARS=saldoActARS, projUSD=saldoActUSD;
+
+  const rows=proyItems.map(function(it,i){
+    if(it.moneda==='ARS'){ if(it.dir==='ING') projARS+=it.monto; else projARS-=it.monto; }
+    else { if(it.dir==='ING') projUSD+=it.monto; else projUSD-=it.monto; }
+    const dirCol=it.dir==='ING'?'var(--grn)':'var(--red)';
+    return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)">'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--acc)">'+it.fecha+'</td>'+
+      '<td style="padding:7px 10px;font-size:12px;font-weight:700">'+it.desc+'</td>'+
+      '<td style="padding:7px 10px;font-size:11px;color:var(--mut)">'+it.tipo+'</td>'+
+      '<td style="padding:7px 10px;font-size:12px;font-weight:800;color:'+dirCol+'">'+(it.dir==='ING'?'▲':'▼')+' '+(it.moneda==='ARS'?'$'+f0(it.monto):'u$'+f2(it.monto))+'</td>'+
+      '<td style="padding:7px 10px;font-size:12px;font-weight:700;color:'+(projARS>=0?'var(--ars)':'var(--red)')+'">$'+f0(projARS)+'</td>'+
+      '<td style="padding:7px 10px;font-size:12px;font-weight:700;color:'+(projUSD>=0?'var(--usd)':'var(--red)')+'">u$'+f2(projUSD)+'</td>'+
+      '<td style="padding:7px 10px">'+
+        '<button onclick="proyElim('+i+')" style="padding:3px 7px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer">🗑</button>'+
+      '</td>'+
+    '</tr>';
+  }).join('');
+
+  const finOkARS=projARS>=0, finOkUSD=projUSD>=0;
+
+  document.getElementById('proy-app').innerHTML=
+    '<div style="padding:14px 20px;border-bottom:1px solid var(--br);background:var(--sf);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'+
+      '<div><div style="font-size:17px;font-weight:900">📈 Proyección financiera</div><div style="font-size:11px;color:var(--mut)">Simulá cobros y pagos esperados — no afecta la caja real</div></div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--mut)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo actual ARS</div><div style="font-size:14px;font-weight:900;color:var(--ars)">$'+f0(saldoActARS)+'</div></div>'+
+        '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--mut)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo actual USD</div><div style="font-size:14px;font-weight:900;color:var(--usd)">u$'+f2(saldoActUSD)+'</div></div>'+
+        '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid '+(finOkARS?'var(--grn)':'var(--red)')+'"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Proyección ARS</div><div style="font-size:16px;font-weight:900;color:'+(finOkARS?'var(--grn)':'var(--red)')+'">$'+f0(projARS)+'</div></div>'+
+        '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid '+(finOkUSD?'var(--usd)':'var(--red)')+'"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Proyección USD</div><div style="font-size:16px;font-weight:900;color:'+(finOkUSD?'var(--usd)':'var(--red)')+'">u$'+f2(projUSD)+'</div></div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 155px)">'+
+      '<div style="background:var(--sf);border-right:1px solid var(--br);padding:14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto">'+
+        '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--br);padding-bottom:7px">Nuevo movimiento esperado</div>'+
+        '<div class="fld"><label>Fecha esperada</label><input type="date" id="pFecha" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:13px"></div>'+
+        '<div class="fld"><label>Descripción</label><input type="text" id="pDesc" placeholder="Ej: Cobro Walter, Pago proveedor..." style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:13px"></div>'+
+        '<div class="fld"><label>Tipo / Categoría</label><input type="text" id="pTipo" placeholder="COBRO, PAGO, RETIRO..." style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:13px"></div>'+
+        '<div class="fld"><label>Dirección</label>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--br);border-radius:6px;overflow:hidden">'+
+            '<button id="pBIng" onclick="setPDir(\'ING\')" style="padding:9px;font-size:12px;font-weight:800;border:none;background:rgba(16,185,129,.12);color:var(--grn);cursor:pointer">▲ Ingreso</button>'+
+            '<button id="pBEgr" onclick="setPDir(\'EGR\')" style="padding:9px;font-size:12px;font-weight:800;border:none;background:var(--sf2);color:var(--mut);cursor:pointer">▼ Egreso</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="fld"><label>Moneda</label>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--br);border-radius:6px;overflow:hidden">'+
+            '<button id="pBARS" onclick="setPMon(\'ARS\')" style="padding:9px;font-size:12px;font-weight:800;border:none;background:rgba(251,191,36,.1);color:var(--ars);cursor:pointer">$ ARS</button>'+
+            '<button id="pBUSD" onclick="setPMon(\'USD\')" style="padding:9px;font-size:12px;font-weight:800;border:none;background:var(--sf2);color:var(--mut);cursor:pointer">u$ USD</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="fld"><label>Monto</label><input type="number" id="pMonto" placeholder="0,00" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:14px;font-weight:800"></div>'+
+        '<button onclick="proyAgregar()" style="padding:11px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:800;cursor:pointer">+ Agregar</button>'+
+        (proyItems.length>0?'<button onclick="proyLimpiar()" style="padding:9px;border-radius:8px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:12px;font-weight:700;cursor:pointer">🗑 Limpiar todo</button>':'')+
+        '<div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:10px;font-size:11px;color:var(--mut);line-height:1.6;margin-top:auto">'+
+          '💡 Solo simulación. No afecta la caja real ni Supabase.'+
+        '</div>'+
+      '</div>'+
+      '<div style="overflow:auto">'+
+        (proyItems.length===0
+          ?'<div style="padding:60px;text-align:center;color:var(--mut)"><div style="font-size:48px;margin-bottom:12px">📈</div><div style="font-size:16px;font-weight:700;margin-bottom:8px">Sin movimientos proyectados</div><div style="font-size:12px">Agregá cobros o pagos esperados para ver cómo va a quedar el saldo</div></div>'
+          :'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--sf)">'+
+            '<th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Fecha</th>'+
+            '<th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Descripción</th>'+
+            '<th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Tipo</th>'+
+            '<th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Monto</th>'+
+            '<th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--ars);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Saldo ARS</th>'+
+            '<th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--usd);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Saldo USD</th>'+
+            '<th style="padding:7px 10px;position:sticky;top:0;border-bottom:1px solid var(--br)"></th>'+
+          '</tr></thead><tbody>'+rows+'</tbody></table>'
+        )+
+      '</div>'+
+    '</div>';
+
+  const pfEl=document.getElementById('pFecha');
+  if(pfEl&&!pfEl.value) pfEl.value=fmtD(new Date());
+}
+
+function setPDir(d){
+  _pDir=d;
+  const bi=document.getElementById('pBIng'),be=document.getElementById('pBEgr');
+  if(!bi||!be) return;
+  bi.style.background=d==='ING'?'rgba(16,185,129,.12)':'var(--sf2)'; bi.style.color=d==='ING'?'var(--grn)':'var(--mut)';
+  be.style.background=d==='EGR'?'rgba(239,68,68,.1)':'var(--sf2)'; be.style.color=d==='EGR'?'var(--red)':'var(--mut)';
+}
+function setPMon(m){
+  _pMon=m;
+  const ba=document.getElementById('pBARS'),bu=document.getElementById('pBUSD');
+  if(!ba||!bu) return;
+  ba.style.background=m==='ARS'?'rgba(251,191,36,.1)':'var(--sf2)'; ba.style.color=m==='ARS'?'var(--ars)':'var(--mut)';
+  bu.style.background=m==='USD'?'rgba(52,211,153,.1)':'var(--sf2)'; bu.style.color=m==='USD'?'var(--usd)':'var(--mut)';
+}
+function proyAgregar(){
+  const fecha=document.getElementById('pFecha')?.value;
+  const desc=document.getElementById('pDesc')?.value.trim();
+  const tipo=document.getElementById('pTipo')?.value.trim()||'—';
+  const monto=parseFloat(document.getElementById('pMonto')?.value)||0;
+  if(!fecha||!desc||monto<=0){ toast('Completá fecha, descripción y monto',1); return; }
+  proyItems.push({fecha,desc,tipo,dir:_pDir,moneda:_pMon,monto});
+  proyItems.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  localStorage.setItem('ws_proy',JSON.stringify(proyItems));
+  document.getElementById('pDesc').value='';
+  document.getElementById('pMonto').value='';
+  renderProy();
+  toast('✓ Proyección agregada');
+}
+function proyElim(i){
+  proyItems.splice(i,1);
+  localStorage.setItem('ws_proy',JSON.stringify(proyItems));
+  renderProy();
+}
+function proyLimpiar(){
+  if(!confirm('¿Limpiar toda la proyección?')) return;
+  proyItems=[];
+  localStorage.setItem('ws_proy','[]');
+  renderProy();
+}
+
 </script>
 </body>
 </html>
