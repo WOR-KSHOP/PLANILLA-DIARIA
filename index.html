@@ -928,7 +928,7 @@ async function renderNeo(){
   const {data}=await sb.from('neo_capital').select('*').order('fecha',{ascending:false}).order('id',{ascending:false});
   neoMovs=data||[];
   const totP=neoMovs.reduce(function(s,m){return s+(parseFloat(m.pesos)||0);},0);
-  const totU=neoMovs.reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  const totU=totT+totA-totE;
   const rows=neoMovs.map(function(m,i){
     return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)"><td style="padding:6px 10px;font-size:11px;color:var(--acc);font-weight:700">'+m.fecha+'</td><td style="padding:6px 10px;font-size:12px;font-weight:700">'+m.cliente+'</td><td style="padding:6px 10px;font-size:12px;color:var(--ars);font-weight:700">$'+f0(parseFloat(m.pesos)||0)+'</td><td style="padding:6px 10px;font-size:11px;color:var(--mut)">$'+(parseFloat(m.tc)||0).toLocaleString('es-AR')+'</td><td style="padding:6px 10px;font-size:13px;font-weight:900;color:var(--usd)">u$'+f2(parseFloat(m.usd)||0)+'</td><td style="padding:6px 10px"><span style="padding:2px 6px;border-radius:3px;font-size:9px;font-weight:900;background:'+(m.tipo_mov==='EXTRACCION'?'rgba(239,68,68,.1)':'rgba(96,165,250,.1)')+';color:'+(m.tipo_mov==='EXTRACCION'?'var(--red)':'#60a5fa')+'">'+(m.tipo_mov||'TRANSF.')+'</span></td><td style="padding:6px 10px;font-size:10px;color:var(--mut)">'+( m.banco||'—')+'</td><td style="padding:6px 10px;font-size:10px;color:var(--mut)">'+( m.emisor||'—')+'</td><td style="padding:6px 10px;font-size:10px;color:var(--mut)">'+( m.observaciones||'—')+'</td><td style="padding:6px 10px"><div style="display:flex;gap:4px"><button onclick="neoElim('+i+')" style="padding:3px 7px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer">🗑</button></div></td></tr>';
   }).join('');
@@ -941,8 +941,8 @@ async function renderNeo(){
       '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'+
         '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--mut)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo inicial u$</div><div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="color:var(--usd);font-size:11px">u$</span><input type="number" id="neoIniInp" value="'+neoIni+'" step="0.01" onchange="saveNeoIni()" style="background:transparent;border:none;border-bottom:1px dashed var(--br);color:var(--usd);font-size:14px;font-weight:900;width:90px;font-family:var(--fnt)"></div></div>'+
         '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--ars)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Total Pesos</div><div style="font-size:15px;font-weight:900;color:var(--ars)">$'+f0(totP)+'</div></div>'+
-        '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--usd)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">USD registrado</div><div style="font-size:15px;font-weight:900;color:var(--usd)">u$'+f2(totU)+'</div></div>'+
-        '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--grn)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Total USD</div><div style="font-size:19px;font-weight:900;color:var(--grn)">u$'+f2(neoIni+totU)+'</div></div>'+
+        '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--usd)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">USD registrado</div><div style="font-size:15px;font-weight:900;color:var(--usd)">u$'+totU.toFixed(2)+'</div></div>'+
+        '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--grn)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Total USD</div><div style="font-size:19px;font-weight:900;color:var(--grn)">u$'+(neoIni+totU).toFixed(2)+'</div></div>'+
       '</div>'+
     '</div>'+
     '<div style="display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 155px)">'+
@@ -1011,43 +1011,109 @@ async function neoReg(){
 function closeNeoMo(){var m=document.getElementById('moNeo');if(m)m.classList.remove('show');}
 
 function showNeoCierre(){
+  var neoIniVal=parseFloat(document.getElementById('neoIniInp')?document.getElementById('neoIniInp').value:0)||0;
   var totT=neoMovs.filter(function(m){return m.tipo_mov==='TRANSFERENCIA'||!m.tipo_mov;}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
   var totE=neoMovs.filter(function(m){return m.tipo_mov==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
   var totA=neoMovs.filter(function(m){return m.tipo_mov==='AJUSTE';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
-  var totP=neoMovs.reduce(function(s,m){return s+(parseFloat(m.pesos)||0);},0);
-  var totU=neoMovs.reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  var totP=neoMovs.filter(function(m){return m.tipo_mov!=='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.pesos)||0);},0);
+  var totU=totT+totA-totE;
+  var saldoFinal=neoIniVal+totU;
+
+  // Agrupar por cliente (extracciones restan)
   var clientes={};
   neoMovs.forEach(function(m){
-    if(!clientes[m.cliente]) clientes[m.cliente]={pesos:0,usd:0,movs:0,op:m.operadora||''};
-    clientes[m.cliente].pesos+=(parseFloat(m.pesos)||0);
-    clientes[m.cliente].usd+=(parseFloat(m.usd)||0);
-    clientes[m.cliente].movs++;
+    var cli=m.cliente||'—';
+    if(!clientes[cli]) clientes[cli]={entrada:0,salida:0,ajuste:0,movs:0};
+    var u=parseFloat(m.usd)||0;
+    if(m.tipo_mov==='EXTRACCION') clientes[cli].salida+=u;
+    else if(m.tipo_mov==='AJUSTE') clientes[cli].ajuste+=u;
+    else clientes[cli].entrada+=u;
+    clientes[cli].movs++;
   });
-  var cliRows=Object.entries(clientes).sort(function(a,b){return b[1].usd-a[1].usd;})
-    .map(function(e){return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)"><td style="padding:7px 12px;font-weight:700">'+e[0]+'</td><td style="padding:7px 12px;color:var(--ars);font-weight:700">$'+f0(e[1].pesos)+'</td><td style="padding:7px 12px;color:var(--usd);font-weight:800">u$'+e[1].usd.toFixed(2)+'</td><td style="padding:7px 12px;color:var(--mut);font-size:11px">'+e[1].movs+' mov.</td></tr>';}).join('');
-  var body='<div style="padding:16px 24px;border-bottom:1px solid var(--br);background:var(--sf2)">'+
-    '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">Resumen acumulado</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">'+
-      '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid #60a5fa"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Transferencias</div><div style="font-size:18px;font-weight:900;color:#60a5fa">u$'+totT.toFixed(2)+'</div></div>'+
-      '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--red)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Extracciones</div><div style="font-size:18px;font-weight:900;color:var(--red)">u$'+totE.toFixed(2)+'</div></div>'+
-      '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--orn)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Ajustes/Neteos</div><div style="font-size:18px;font-weight:900;color:var(--orn)">u$'+totA.toFixed(2)+'</div></div>'+
-      '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--grn)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Total USD neto</div><div style="font-size:22px;font-weight:900;color:var(--grn)">u$'+totU.toFixed(2)+'</div></div>'+
+
+  var cliRows=Object.entries(clientes).sort(function(a,b){return (b[1].entrada-b[1].salida)-(a[1].entrada-a[1].salida);}).map(function(e){
+    var neto=e[1].entrada+e[1].ajuste-e[1].salida;
+    return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)">'+
+      '<td style="padding:7px 10px;font-weight:700;font-size:12px">'+e[0]+'</td>'+
+      (e[1].entrada>0?'<td style="padding:7px 10px;color:var(--grn);font-weight:700">u$'+e[1].entrada.toFixed(2)+'</td>':'<td style="padding:7px 10px;color:var(--mut)">—</td>')+
+      (e[1].salida>0?'<td style="padding:7px 10px;color:var(--red);font-weight:700">u$'+e[1].salida.toFixed(2)+'</td>':'<td style="padding:7px 10px;color:var(--mut)">—</td>')+
+      (e[1].ajuste>0?'<td style="padding:7px 10px;color:var(--orn);font-weight:700">u$'+e[1].ajuste.toFixed(2)+'</td>':'<td style="padding:7px 10px;color:var(--mut)">—</td>')+
+      '<td style="padding:7px 10px;font-weight:900;color:'+(neto>=0?'var(--grn)':'var(--red)')+'">u$'+neto.toFixed(2)+'</td>'+
+      '<td style="padding:7px 10px;color:var(--mut);font-size:10px">'+e[1].movs+' mov.</td>'+
+    '</tr>';
+  }).join('');
+
+  // Detalle de movimientos
+  var movRows=neoMovs.map(function(m){
+    var tCol=m.tipo_mov==='EXTRACCION'?'var(--red)':m.tipo_mov==='AJUSTE'?'var(--orn)':'#60a5fa';
+    var usd=parseFloat(m.usd)||0;
+    return '<tr style="border-bottom:1px solid rgba(46,51,80,.25)">'+
+      '<td style="padding:5px 8px;font-size:10px;color:var(--acc)">'+m.fecha+'</td>'+
+      '<td style="padding:5px 8px;font-size:11px;font-weight:700">'+m.cliente+'</td>'+
+      '<td style="padding:5px 8px"><span style="padding:1px 5px;border-radius:3px;font-size:9px;font-weight:900;background:rgba(99,102,241,.1);color:'+tCol+'">'+( m.tipo_mov||'TRANSF.')+'</span></td>'+
+      '<td style="padding:5px 8px;color:var(--ars);font-size:11px">$'+f0(parseFloat(m.pesos)||0)+'</td>'+
+      '<td style="padding:5px 8px;font-size:11px;font-weight:800;color:'+(m.tipo_mov==='EXTRACCION'?'var(--red)':m.tipo_mov==='AJUSTE'?'var(--orn)':'var(--usd)')+'">'+( m.tipo_mov==='EXTRACCION'?'- ':'+ ')+'u$'+usd.toFixed(2)+'</td>'+
+      '<td style="padding:5px 8px;font-size:10px;color:var(--mut)">'+( m.banco||'')+'</td>'+
+      '<td style="padding:5px 8px;font-size:10px;font-weight:800;color:'+(m.operadora==='LAURA'?'#818cf8':'var(--grn)')+'">'+( m.operadora||'')+'</td>'+
+    '</tr>';
+  }).join('');
+
+  var body=
+    // RESUMEN SALDOS
+    '<div style="padding:16px 24px;border-bottom:1px solid var(--br);background:var(--sf2)">'+
+      '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">1. Resumen del período</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">'+
+        '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--mut)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Saldo inicial</div><div style="font-size:17px;font-weight:900;color:var(--usd)">u$'+neoIniVal.toFixed(2)+'</div></div>'+
+        '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid #60a5fa"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">▲ Transferencias</div><div style="font-size:17px;font-weight:900;color:#60a5fa">u$'+totT.toFixed(2)+'</div></div>'+
+        '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--red)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">▼ Extracciones</div><div style="font-size:17px;font-weight:900;color:var(--red)">u$'+totE.toFixed(2)+'</div></div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'+
+        '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--orn)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">⚖️ Ajustes</div><div style="font-size:17px;font-weight:900;color:var(--orn)">u$'+totA.toFixed(2)+'</div></div>'+
+        '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--ars)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Total pesos</div><div style="font-size:17px;font-weight:900;color:var(--ars)">$'+f0(totP)+'</div></div>'+
+        '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--grn)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Saldo final</div><div style="font-size:22px;font-weight:900;color:var(--grn)">u$'+saldoFinal.toFixed(2)+'</div></div>'+
+      '</div>'+
     '</div>'+
-    '<div style="margin-top:10px;background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--ars)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:4px">Total Pesos transferidos</div><div style="font-size:18px;font-weight:900;color:var(--ars)">$'+f0(totP)+'</div></div>'+
-  '</div>'+
-  '<div style="padding:16px 24px">'+
-    '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">Por cliente</div>'+
-    '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--sf2)"><th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Cliente</th><th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Pesos</th><th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">USD</th><th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Movs.</th></tr></thead><tbody>'+cliRows+'</tbody></table>'+
-  '</div>'+
-  '<div style="padding:14px 24px;display:flex;justify-content:flex-end">'+
-    '<button onclick="closeNeoMo()" style="padding:8px 16px;border-radius:6px;border:1px solid var(--br);background:var(--sf2);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer">Cerrar</button>'+
-  '</div>';
+    // POR CLIENTE
+    '<div style="padding:16px 24px;border-bottom:1px solid var(--br)">'+
+      '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">2. Por cliente</div>'+
+      '<table style="width:100%;border-collapse:collapse;font-size:12px">'+
+        '<thead><tr style="background:var(--sf2)">'+
+          '<th style="padding:6px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Cliente</th>'+
+          '<th style="padding:6px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--grn);text-transform:uppercase;border-bottom:1px solid var(--br)">▲ Entrada</th>'+
+          '<th style="padding:6px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--red);text-transform:uppercase;border-bottom:1px solid var(--br)">▼ Extrac.</th>'+
+          '<th style="padding:6px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--orn);text-transform:uppercase;border-bottom:1px solid var(--br)">⚖️ Ajuste</th>'+
+          '<th style="padding:6px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--txt);text-transform:uppercase;border-bottom:1px solid var(--br)">Neto</th>'+
+          '<th style="padding:6px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Movs.</th>'+
+        '</tr></thead>'+
+        '<tbody>'+cliRows+'</tbody>'+
+      '</table>'+
+    '</div>'+
+    // DETALLE MOVIMIENTOS
+    '<div style="padding:16px 24px;border-bottom:1px solid var(--br)">'+
+      '<div style="font-size:10px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">3. Detalle de movimientos ('+neoMovs.length+')</div>'+
+      '<table style="width:100%;border-collapse:collapse;font-size:11px">'+
+        '<thead><tr style="background:var(--sf2)">'+
+          '<th style="padding:5px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Fecha</th>'+
+          '<th style="padding:5px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Cliente</th>'+
+          '<th style="padding:5px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Tipo</th>'+
+          '<th style="padding:5px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Pesos</th>'+
+          '<th style="padding:5px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">USD</th>'+
+          '<th style="padding:5px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Banco</th>'+
+          '<th style="padding:5px 8px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--br)">Op.</th>'+
+        '</tr></thead>'+
+        '<tbody>'+movRows+'</tbody>'+
+      '</table>'+
+    '</div>'+
+    '<div style="padding:14px 24px;display:flex;justify-content:flex-end">'+
+      '<button onclick="closeNeoMo()" style="padding:8px 16px;border-radius:6px;border:1px solid var(--br);background:var(--sf2);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer">Cerrar</button>'+
+    '</div>';
+
   var mo=document.getElementById('moNeo');
   if(!mo){
     mo=document.createElement('div');
     mo.id='moNeo';
     mo.className='mo';
-    mo.innerHTML='<div class="md" style="width:680px"><div style="padding:18px 24px;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center"><div style="font-size:19px;font-weight:900">📊 Resumen Neo Capital</div><button onclick="closeNeoMo()" style="background:none;border:none;color:var(--mut);font-size:20px;cursor:pointer">✕</button></div><div id="moNeoBody" style="overflow-y:auto;max-height:80vh"></div></div>';
+    mo.innerHTML='<div class="md" style="width:780px"><div style="padding:18px 24px;border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center"><div style="font-size:19px;font-weight:900">📊 Cierre Neo Capital</div><button onclick="closeNeoMo()" style="background:none;border:none;color:var(--mut);font-size:20px;cursor:pointer">✕</button></div><div id="moNeoBody" style="overflow-y:auto;max-height:85vh"></div></div>';
     document.body.appendChild(mo);
   }
   document.getElementById('moNeoBody').innerHTML=body;
