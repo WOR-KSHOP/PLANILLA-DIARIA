@@ -990,7 +990,8 @@ function calcNeo(){
   const p=parseFloat(document.getElementById('nP')?.value)||0;
   const tc=parseFloat(document.getElementById('nTC')?.value)||0;
   const el=document.getElementById('nRes');
-  if(el) el.textContent='u$'+f2(tc>0?p/tc:0);
+  const val=tc>0?p/tc:0;
+  if(el) el.textContent='u$'+(val).toFixed(2);
 }
 async function saveNeoIni(){
   const v=parseFloat(document.getElementById('neoIniInp')?.value)||0;
