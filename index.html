@@ -927,7 +927,10 @@ async function renderNeo(){
   const neoIni=parseFloat(si?.saldo_usd)||0;
   const {data}=await sb.from('neo_capital').select('*').order('fecha',{ascending:false}).order('id',{ascending:false});
   neoMovs=data||[];
-  const totP=neoMovs.reduce(function(s,m){return s+(parseFloat(m.pesos)||0);},0);
+  const totT=neoMovs.filter(function(m){return m.tipo_mov==='TRANSFERENCIA'||!m.tipo_mov;}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  const totE=neoMovs.filter(function(m){return m.tipo_mov==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  const totA=neoMovs.filter(function(m){return m.tipo_mov==='AJUSTE';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  const totP=neoMovs.filter(function(m){return m.tipo_mov!=='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.pesos)||0);},0);
   const totU=totT+totA-totE;
   const rows=neoMovs.map(function(m,i){
     return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)"><td style="padding:6px 10px;font-size:11px;color:var(--acc);font-weight:700">'+m.fecha+'</td><td style="padding:6px 10px;font-size:12px;font-weight:700">'+m.cliente+'</td><td style="padding:6px 10px;font-size:12px;color:var(--ars);font-weight:700">$'+f0(parseFloat(m.pesos)||0)+'</td><td style="padding:6px 10px;font-size:11px;color:var(--mut)">$'+(parseFloat(m.tc)||0).toLocaleString('es-AR')+'</td><td style="padding:6px 10px;font-size:13px;font-weight:900;color:var(--usd)">u$'+f2(parseFloat(m.usd)||0)+'</td><td style="padding:6px 10px"><span style="padding:2px 6px;border-radius:3px;font-size:9px;font-weight:900;background:'+(m.tipo_mov==='EXTRACCION'?'rgba(239,68,68,.1)':'rgba(96,165,250,.1)')+';color:'+(m.tipo_mov==='EXTRACCION'?'var(--red)':'#60a5fa')+'">'+(m.tipo_mov||'TRANSF.')+'</span></td><td style="padding:6px 10px;font-size:10px;color:var(--mut)">'+( m.banco||'—')+'</td><td style="padding:6px 10px;font-size:10px;color:var(--mut)">'+( m.emisor||'—')+'</td><td style="padding:6px 10px;font-size:10px;color:var(--mut)">'+( m.observaciones||'—')+'</td><td style="padding:6px 10px"><div style="display:flex;gap:4px"><button onclick="neoElim('+i+')" style="padding:3px 7px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer">🗑</button></div></td></tr>';
