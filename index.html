@@ -165,6 +165,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
   <button class="tab-btn" id="tab-pend" onclick="switchTab('pend')" style="position:relative">
     🔔 Pendientes<span id="pendBadge" style="display:none;position:absolute;top:6px;right:4px;background:var(--red);color:#fff;font-size:9px;font-weight:900;padding:1px 4px;border-radius:8px">0</span>
   </button>
+  <button class="tab-btn" id="tab-proy" onclick="switchTab('proy')">📈 Proyección</button>
 </div>
 
 <!-- CAJA -->
@@ -272,6 +273,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
 <div id="pane-usdt" class="tab-pane"><div id="usdt-app" style="padding:20px;color:var(--mut)">Cargando...</div></div>
 <!-- PENDIENTES -->
 <div id="pane-pend" class="tab-pane"><div id="pend-app" style="padding:20px;color:var(--mut)">Cargando...</div></div>
+<div id="pane-proy" class="tab-pane"><div id="proy-app"></div></div>
 
 <!-- MODAL CIERRE -->
 <div class="mo" id="moCierre">
@@ -333,6 +335,7 @@ function switchTab(t){
   if(t==='neo') renderNeo();
   if(t==='usdt') renderUSDT();
   if(t==='pend') renderPend();
+  if(t==='proy') renderProy();
 }
 
 // ── SUPABASE DB ──
@@ -624,6 +627,19 @@ function showCierre(){
   const tIA=movs.reduce((s,m)=>s+m.iA,0),tEA=movs.reduce((s,m)=>s+m.eA,0);
   const tIU=movs.reduce((s,m)=>s+m.iU,0),tEU=movs.reduce((s,m)=>s+m.eU,0);
   const verif=movs.filter(m=>m.ok).length;
+  // Neo Capital y USDT saldos
+  const neoIniEl=document.getElementById('neoIniInp');
+  const neoIniV=parseFloat(neoIniEl?neoIniEl.value:0)||0;
+  const neoTT=neoMovs.filter(function(m){return m.tipo_mov==='TRANSFERENCIA'||!m.tipo_mov;}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  const neoTE=neoMovs.filter(function(m){return m.tipo_mov==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  const neoTA=neoMovs.filter(function(m){return m.tipo_mov==='AJUSTE';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+  const neoSaldoCierre=neoIniV+neoTT+neoTA-neoTE;
+  const usdtIniEl=document.getElementById('usdtIniInp');
+  const usdtIniV=parseFloat(usdtIniEl?usdtIniEl.value:0)||0;
+  const usdtTC=usdtMovs.filter(function(m){return m.tipo==='COMPRA';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+  const usdtTV=usdtMovs.filter(function(m){return m.tipo==='VENTA';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+  const usdtTEx=usdtMovs.filter(function(m){return m.tipo==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+  const usdtSaldoCierre=usdtIniV+usdtTC-usdtTV-usdtTEx;
   document.getElementById('cSub').textContent=fechaActual.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+movs.length+' movs · '+verif+' verificados';
   const TIPOS=[
     {k:'COBRO',l:'Cobros',ic:'💰',c:'var(--grn)',b:'#10b981'},
@@ -761,6 +777,16 @@ function showCierre(){
         '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--grn)"><div style="font-size:9px;color:var(--mut);font-weight:700;margin-bottom:4px;text-transform:uppercase">▲ Ingresos USD</div><div style="font-size:17px;font-weight:900;color:var(--grn)">u$'+f2(tIU)+'</div></div>'+
         '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--red)"><div style="font-size:9px;color:var(--mut);font-weight:700;margin-bottom:4px;text-transform:uppercase">▼ Egresos USD</div><div style="font-size:17px;font-weight:900;color:var(--red)">u$'+f2(tEU)+'</div></div>'+
         '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--usd)"><div style="font-size:9px;color:var(--mut);font-weight:700;margin-bottom:4px;text-transform:uppercase">Saldo final USD</div><div style="font-size:21px;font-weight:900;color:var(--usd)">u$'+f2(sUSD)+'</div></div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+
+        '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid #60a5fa;display:flex;justify-content:space-between;align-items:center">'+
+          '<div><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:3px">🏦 Neo Capital</div><div style="font-size:10px;color:var(--mut)">Saldo USD acumulado</div></div>'+
+          '<div style="font-size:20px;font-weight:900;color:#60a5fa">u$'+neoSaldoCierre.toFixed(2)+'</div>'+
+        '</div>'+
+        '<div style="background:var(--sf);border-radius:8px;padding:12px;border-left:3px solid var(--usdt);display:flex;justify-content:space-between;align-items:center">'+
+          '<div><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase;margin-bottom:3px">⚡ USDT</div><div style="font-size:10px;color:var(--mut)">Saldo digital</div></div>'+
+          '<div style="font-size:20px;font-weight:900;color:var(--usdt)">⚡'+usdtSaldoCierre.toFixed(2)+'</div>'+
+        '</div>'+
       '</div>'+
     '</div>'+
     // Categorías
