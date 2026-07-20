@@ -71,6 +71,7 @@ input::placeholder{color:var(--mut)}
 .tb.ah{border-color:#60a5fa;background:rgba(96,165,250,.08);color:#60a5fa}
 .tb.al{border-color:#ec4899;background:rgba(236,72,153,.08);color:#ec4899}
 .tb.aj{border-color:#818cf8;background:rgba(129,140,248,.08);color:#818cf8}
+.tb.av{border-color:var(--usd);background:rgba(52,211,153,.08);color:var(--usd)}
 .tog2{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--br);border-radius:6px;overflow:hidden}
 .t2b{padding:7px;text-align:center;font-size:12px;font-weight:800;cursor:pointer;background:var(--sf2);color:var(--mut);border:none;transition:all .14s}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -96,6 +97,7 @@ tbody td{padding:6px 8px;vertical-align:middle}
 .ch-haber{background:rgba(96,165,250,.1);color:#60a5fa}
 .ch-logistica{background:rgba(236,72,153,.1);color:#ec4899}
 .ch-ajuste{background:rgba(99,102,241,.1);color:#818cf8}
+.ch-venta_div{background:rgba(52,211,153,.1);color:var(--usd)}
 .n{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
 .cg{color:var(--grn)}.cr{color:var(--red)}.ca{color:var(--ars)}.cu{color:var(--usd)}.cm{color:var(--mut)}
 .acts{display:flex;gap:3px}
@@ -149,6 +151,20 @@ tbody td{padding:6px 8px;vertical-align:middle}
 <header>
   <div class="logo">WORK <span>SHOP</span></div>
   <div class="hdr-r">
+    <!-- PANEL SALDOS GLOBALES -->
+    <div id="globalSaldos" style="display:flex;gap:6px;align-items:center;background:var(--sf2);border:1px solid var(--br);border-radius:8px;padding:4px 10px;font-size:11px">
+      <span style="color:var(--mut);font-size:10px;font-weight:700">CAJA</span>
+      <span style="color:var(--ars);font-weight:800" id="gSaldoARS">$0</span>
+      <span style="color:var(--br)">|</span>
+      <span style="color:var(--usd);font-weight:800" id="gSaldoUSD">u$0</span>
+      <span style="color:var(--br)">|</span>
+      <span style="color:#60a5fa;font-size:10px;font-weight:700">NEO</span>
+      <span style="color:#60a5fa;font-weight:800" id="gSaldoNeo">u$0</span>
+      <span style="color:var(--br)">|</span>
+      <span style="color:var(--usdt);font-size:10px;font-weight:700">USDT</span>
+      <span style="color:var(--usdt);font-weight:800" id="gSaldoUSDT">⚡0</span>
+    </div>
+    <span style="color:var(--br)">|</span>
     <span style="font-size:11px;color:var(--mut)">Usuario:</span>
     <button class="ubtn" id="btnLaura" onclick="setUsuario('LAURA')">👩 Laura</button>
     <button class="ubtn" id="btnMaggie" onclick="setUsuario('MAGGIE')">👩‍💼 Maggie</button>
@@ -215,7 +231,8 @@ tbody td{padding:6px 8px;vertical-align:middle}
           <button class="tb" onclick="setTipo('GASTO',this)"><span class="ic">🧾</span>Gasto</button>
           <button class="tb" onclick="setTipo('HABER',this)"><span class="ic">👤</span>Haber</button>
           <button class="tb" onclick="setTipo('LOGISTICA',this)" style="grid-column:span 2"><span class="ic">🚛</span>Logística</button>
-          <button class="tb" onclick="setTipo('AJUSTE',this)" style="grid-column:span 2"><span class="ic">⚖️</span>Ajuste / Neteo</button>
+          <button class="tb" onclick="setTipo('VENTA_DIV',this)"><span class="ic">💵→💰</span>Venta divisas</button>
+          <button class="tb" onclick="setTipo('AJUSTE',this)"><span class="ic">⚖️</span>Ajuste / Neteo</button>
         </div>
       </div>
       <div class="fld" id="divInfo" style="display:none"><div style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:6px;padding:8px;font-size:11px;color:var(--ars)">💱 Compra de divisas: ingresá los USD. Los ARS salen según cotización.</div></div>
@@ -313,8 +330,34 @@ function loading(v){document.getElementById('loading').classList.toggle('show',v
 function tick(){
   const n=new Date();
   document.getElementById('reloj').textContent=n.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  updGlobalSaldos();
 }
 setInterval(tick,1000); tick();
+
+function updGlobalSaldos(){
+  const gARS=document.getElementById('gSaldoARS');
+  const gUSD=document.getElementById('gSaldoUSD');
+  const gNeo=document.getElementById('gSaldoNeo');
+  const gUsdt=document.getElementById('gSaldoUSDT');
+  if(gARS) gARS.textContent='$'+f0(sARS);
+  if(gUSD) gUSD.textContent='u$'+f2(sUSD);
+  // Neo saldo
+  try{
+    const nIni=parseFloat(document.getElementById('neoIniInp')?.value)||0;
+    const nT=neoMovs.filter(function(m){return m.tipo_mov==='TRANSFERENCIA'||!m.tipo_mov;}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+    const nE=neoMovs.filter(function(m){return m.tipo_mov==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+    const nA=neoMovs.filter(function(m){return m.tipo_mov==='AJUSTE';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+    if(gNeo) gNeo.textContent='u$'+(nIni+nT+nA-nE).toFixed(2);
+  }catch(e){}
+  // USDT saldo
+  try{
+    const uIni=parseFloat(document.getElementById('usdtIniInp')?.value)||0;
+    const uC=usdtMovs.filter(function(m){return m.tipo==='COMPRA';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+    const uV=usdtMovs.filter(function(m){return m.tipo==='VENTA';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+    const uEx=usdtMovs.filter(function(m){return m.tipo==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+    if(gUsdt) gUsdt.textContent='⚡'+(uIni+uC-uV-uEx).toFixed(2);
+  }catch(e){}
+}
 
 // ── USUARIO ──
 function setUsuario(u,showT=true){
@@ -366,7 +409,7 @@ async function recargar(fecha){
   let acA=sIniARS, acU=sIniUSD;
   movs.forEach(m=>{acA+=m.iA-m.eA; acU+=m.iU-m.eU; m.sARS=acA; m.sUSD=acU;});
   sARS=acA; sUSD=acU;
-  render(); updSaldos();
+  render(); updSaldos(); updGlobalSaldos();
 }
 
 // ── REALTIME ──
@@ -461,13 +504,16 @@ function irFecha(v){if(!v)return;const[y,m,d]=v.split('-').map(Number);const n=n
 function setTipo(t,btn){
   tipo=t;
   document.querySelectorAll('.tb').forEach(b=>b.className='tb');
-  const cls={COBRO:'ac',PAGO:'ap',DIVISA:'ad',RETIRO:'ar',GASTO:'ag',HABER:'ah',LOGISTICA:'al',AJUSTE:'aj'};
+  const cls={COBRO:'ac',PAGO:'ap',DIVISA:'ad',RETIRO:'ar',GASTO:'ag',HABER:'ah',LOGISTICA:'al',AJUSTE:'aj',VENTA_DIV:'av'};
   btn.classList.add(cls[t]);
   const div=t==='DIVISA';
-  document.getElementById('divInfo').style.display=div?'block':'none';
-  document.getElementById('fldMon').style.opacity=div?'.4':'1';
-  document.getElementById('fldDir').style.opacity=div?'.4':'1';
-  document.getElementById('mLbl').textContent=div?'Monto USD':'Monto '+(moneda==='ARS'?'ARS':'USD');
+  const vdiv=t==='VENTA_DIV';
+  document.getElementById('divInfo').style.display=div?'block':vdiv?'block':'none';
+  if(div) document.getElementById('divInfo').querySelector('div').textContent='💱 Compra de divisas: ingresá los USD. Los ARS salen según cotización.';
+  if(vdiv) document.getElementById('divInfo').querySelector('div').textContent='💵→💰 Venta de divisas: ingresá los USD que vendés. Los ARS entran según cotización.';
+  document.getElementById('fldMon').style.opacity=(div||vdiv)?'.4':'1';
+  document.getElementById('fldDir').style.opacity=(div||vdiv)?'.4':'1';
+  document.getElementById('mLbl').textContent=(div||vdiv)?'Monto USD':'Monto '+(moneda==='ARS'?'ARS':'USD');
   if(t==='COBRO') setDir('ING');
   if(['PAGO','RETIRO','GASTO','HABER','LOGISTICA'].includes(t)) setDir('EGR');
   if(t==='AJUSTE'){ setDir('ING'); }
@@ -515,6 +561,7 @@ async function registrar(){
   if(tipo!=='DIVISA'&&!dir){toast('Seleccioná ingreso o egreso',1);return;}
   let iA=0,eA=0,iU=0,eU=0;
   if(tipo==='DIVISA'){iU=monto;eA=monto*cotiz;}
+  else if(tipo==='VENTA_DIV'){eU=monto;iA=monto*cotiz;}
   else if(moneda==='ARS'){if(dir==='ING')iA=monto;else eA=monto;}
   else{if(dir==='ING')iU=monto;else eU=monto;}
   let acA=sARS+iA-eA, acU=sUSD+iU-eU;
@@ -650,6 +697,7 @@ function showCierre(){
     {k:'HABER',l:'Haberes',ic:'👤',c:'#60a5fa',b:'#60a5fa'},
     {k:'LOGISTICA',l:'Logística',ic:'🚛',c:'#ec4899',b:'#ec4899'},
     {k:'AJUSTE',l:'Ajustes/Neteos',ic:'⚖️',c:'#818cf8',b:'#818cf8'},
+    {k:'VENTA_DIV',l:'Venta divisas',ic:'💵',c:'var(--usd)',b:'#34d399'},
   ];
   let cats='';
   TIPOS.forEach(function(t){
