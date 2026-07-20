@@ -317,6 +317,8 @@ let sIniARS=0, sIniUSD=0, sARS=0, sUSD=0;
 let fechaActual=null, modoHistorial=false, editIdx=null;
 let diaCerrado=false, modoSearch=false, realtimeCh=null;
 let neoMovs=[], usdtMovs=[], pendMovs=[], neoTipo='TRANSFERENCIA', usdtTipo='COMPRA';
+// Saldos globales persistentes (se actualizan al cargar cada pestaña)
+let gNeoSaldo=0, gUsdtSaldo=0;
 
 // ── HELPERS ──
 function f0(n){return (parseFloat(n)||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -341,22 +343,9 @@ function updGlobalSaldos(){
   const gUsdt=document.getElementById('gSaldoUSDT');
   if(gARS) gARS.textContent='$'+f0(sARS);
   if(gUSD) gUSD.textContent='u$'+f2(sUSD);
-  // Neo saldo
-  try{
-    const nIni=parseFloat(document.getElementById('neoIniInp')?.value)||0;
-    const nT=neoMovs.filter(function(m){return m.tipo_mov==='TRANSFERENCIA'||!m.tipo_mov;}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
-    const nE=neoMovs.filter(function(m){return m.tipo_mov==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
-    const nA=neoMovs.filter(function(m){return m.tipo_mov==='AJUSTE';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
-    if(gNeo) gNeo.textContent='u$'+(nIni+nT+nA-nE).toFixed(2);
-  }catch(e){}
-  // USDT saldo
-  try{
-    const uIni=parseFloat(document.getElementById('usdtIniInp')?.value)||0;
-    const uC=usdtMovs.filter(function(m){return m.tipo==='COMPRA';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
-    const uV=usdtMovs.filter(function(m){return m.tipo==='VENTA';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
-    const uEx=usdtMovs.filter(function(m){return m.tipo==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
-    if(gUsdt) gUsdt.textContent='⚡'+(uIni+uC-uV-uEx).toFixed(2);
-  }catch(e){}
+  // Usar variables globales que se actualizan al cargar cada pestaña
+  if(gNeo) gNeo.textContent='u$'+gNeoSaldo.toFixed(2);
+  if(gUsdt) gUsdt.textContent='⚡'+gUsdtSaldo.toFixed(2);
 }
 
 // ── USUARIO ──
@@ -436,6 +425,32 @@ async function init(){
   setUsuario(op,false);
   await cargarDia(new Date());
   initPend();
+  // Precargar saldos Neo y USDT en background
+  precargarSaldosGlobales();
+}
+
+async function precargarSaldosGlobales(){
+  try{
+    // Neo saldo
+    const {data:neoSI}=await sb.from('saldos_iniciales').select('*').eq('fecha','neo_ini').maybeSingle();
+    const neoIniV=parseFloat(neoSI?.saldo_usd)||0;
+    const {data:neoD}=await sb.from('neo_capital').select('usd,tipo_mov');
+    const nm=neoD||[];
+    const nT=nm.filter(function(m){return m.tipo_mov==='TRANSFERENCIA'||!m.tipo_mov;}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+    const nE=nm.filter(function(m){return m.tipo_mov==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+    const nA=nm.filter(function(m){return m.tipo_mov==='AJUSTE';}).reduce(function(s,m){return s+(parseFloat(m.usd)||0);},0);
+    gNeoSaldo=neoIniV+nT+nA-nE;
+    // USDT saldo
+    const {data:usdtSI}=await sb.from('saldos_iniciales').select('*').eq('fecha','usdt_ini').maybeSingle();
+    const usdtIniV=parseFloat(usdtSI?.saldo_usd)||0;
+    const {data:usdtD}=await sb.from('usdt_movimientos').select('usdt,tipo');
+    const um=usdtD||[];
+    const uC=um.filter(function(m){return m.tipo==='COMPRA';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+    const uV=um.filter(function(m){return m.tipo==='VENTA';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+    const uEx=um.filter(function(m){return m.tipo==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+    gUsdtSaldo=usdtIniV+uC-uV-uEx;
+    updGlobalSaldos();
+  }catch(e){ console.log('Error precargando saldos globales:', e); }
 }
 init();
 
@@ -1045,6 +1060,9 @@ async function renderNeo(){
   const nF=document.getElementById('nF');if(nF)nF.value=hoy;
   const nFCup=document.getElementById('nFCup');if(nFCup)nFCup.value=hoy;
   const nHCup=document.getElementById('nHCup');if(nHCup)nHCup.value=new Date().toTimeString().slice(0,5);
+  // Actualizar saldo global Neo
+  gNeoSaldo=neoIni+totU;
+  updGlobalSaldos();
 }
 function setNeoTipo(t){
   neoTipo=t;
@@ -1242,6 +1260,9 @@ async function renderUSDT(){
       '<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="background:var(--sf)"><th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Fecha</th><th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Tipo</th><th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Descripción</th><th style="padding:7px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">USDT</th><th style="padding:7px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Pesos</th><th style="padding:7px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">TC</th><th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Obs.</th><th style="padding:7px 10px;position:sticky;top:0;border-bottom:1px solid var(--br)"></th></tr></thead><tbody>'+rows+'</tbody></table>'+(usdtMovs.length===0?'<div style="padding:40px;text-align:center;color:var(--mut)"><div style="font-size:32px;margin-bottom:8px">⚡</div>Sin operaciones</div>':'')+'</div>'+
     '</div>';
   const uF=document.getElementById('uF');if(uF)uF.value=fmtD(new Date());
+  // Actualizar saldo global USDT
+  gUsdtSaldo=usdtIni+saldo;
+  updGlobalSaldos();
 }
 function setUsdtTipo(t){
   usdtTipo=t;
