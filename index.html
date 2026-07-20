@@ -1280,10 +1280,19 @@ function renderProy(){
 
   const saldoActARS=sARS;
   const saldoActUSD=sUSD;
-  let projARS=saldoActARS, projUSD=saldoActUSD;
+  // Calcular saldo USDT actual
+  const usdtIniElP=document.getElementById('usdtIniInp');
+  const usdtIniVP=parseFloat(usdtIniElP?usdtIniElP.value:0)||0;
+  const usdtTCP=usdtMovs.filter(function(m){return m.tipo==='COMPRA';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+  const usdtTVP=usdtMovs.filter(function(m){return m.tipo==='VENTA';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+  const usdtTExP=usdtMovs.filter(function(m){return m.tipo==='EXTRACCION';}).reduce(function(s,m){return s+(parseFloat(m.usdt)||0);},0);
+  const usdtSaldoCierre=usdtIniVP+usdtTCP-usdtTVP-usdtTExP;
+  const saldoActUSDT=usdtSaldoCierre;
+  let projARS=saldoActARS, projUSD=saldoActUSD, projUSDT=saldoActUSDT;
 
   const rows=proyItems.map(function(it,i){
     if(it.moneda==='ARS'){ if(it.dir==='ING') projARS+=it.monto; else projARS-=it.monto; }
+    else if(it.moneda==='USDT'){ if(it.dir==='ING') projUSDT+=it.monto; else projUSDT-=it.monto; }
     else { if(it.dir==='ING') projUSD+=it.monto; else projUSD-=it.monto; }
     const dirCol=it.dir==='ING'?'var(--grn)':'var(--red)';
     return '<tr style="border-bottom:1px solid rgba(46,51,80,.3)">'+
@@ -1293,13 +1302,14 @@ function renderProy(){
       '<td style="padding:7px 10px;font-size:12px;font-weight:800;color:'+dirCol+'">'+(it.dir==='ING'?'▲':'▼')+' '+(it.moneda==='ARS'?'$'+f0(it.monto):'u$'+f2(it.monto))+'</td>'+
       '<td style="padding:7px 10px;font-size:12px;font-weight:700;color:'+(projARS>=0?'var(--ars)':'var(--red)')+'">$'+f0(projARS)+'</td>'+
       '<td style="padding:7px 10px;font-size:12px;font-weight:700;color:'+(projUSD>=0?'var(--usd)':'var(--red)')+'">u$'+f2(projUSD)+'</td>'+
+      '<td style="padding:7px 10px;font-size:12px;font-weight:700;color:'+(projUSDT>=0?'var(--usdt)':'var(--red)')+'">⚡'+f2(projUSDT)+'</td>'+
       '<td style="padding:7px 10px">'+
         '<button onclick="proyElim('+i+')" style="padding:3px 7px;border-radius:4px;border:1px solid var(--br);background:var(--sf2);color:var(--mut);font-size:10px;cursor:pointer">🗑</button>'+
       '</td>'+
     '</tr>';
   }).join('');
 
-  const finOkARS=projARS>=0, finOkUSD=projUSD>=0;
+  const finOkARS=projARS>=0, finOkUSD=projUSD>=0, finOkUSDT=projUSDT>=0;
 
   document.getElementById('proy-app').innerHTML=
     '<div style="padding:14px 20px;border-bottom:1px solid var(--br);background:var(--sf);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'+
@@ -1309,6 +1319,8 @@ function renderProy(){
         '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--mut)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo actual USD</div><div style="font-size:14px;font-weight:900;color:var(--usd)">u$'+f2(saldoActUSD)+'</div></div>'+
         '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid '+(finOkARS?'var(--grn)':'var(--red)')+'"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Proyección ARS</div><div style="font-size:16px;font-weight:900;color:'+(finOkARS?'var(--grn)':'var(--red)')+'">$'+f0(projARS)+'</div></div>'+
         '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid '+(finOkUSD?'var(--usd)':'var(--red)')+'"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Proyección USD</div><div style="font-size:16px;font-weight:900;color:'+(finOkUSD?'var(--usd)':'var(--red)')+'">u$'+f2(projUSD)+'</div></div>'+
+        '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid var(--mut)"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Saldo actual USDT</div><div style="font-size:14px;font-weight:900;color:var(--usdt)">⚡'+f2(usdtSaldoCierre)+'</div></div>'+
+        '<div style="background:var(--sf2);border-radius:8px;padding:9px 14px;border-left:3px solid '+(finOkUSDT?'var(--usdt)':'var(--red)')+'"><div style="font-size:9px;color:var(--mut);font-weight:700;text-transform:uppercase">Proyección USDT</div><div style="font-size:16px;font-weight:900;color:'+(finOkUSDT?'var(--usdt)':'var(--red)')+'">⚡'+f2(projUSDT)+'</div></div>'+
       '</div>'+
     '</div>'+
     '<div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 155px)">'+
@@ -1324,9 +1336,10 @@ function renderProy(){
           '</div>'+
         '</div>'+
         '<div class="fld"><label>Moneda</label>'+
-          '<div style="display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--br);border-radius:6px;overflow:hidden">'+
-            '<button id="pBARS" onclick="setPMon(\'ARS\')" style="padding:9px;font-size:12px;font-weight:800;border:none;background:rgba(251,191,36,.1);color:var(--ars);cursor:pointer">$ ARS</button>'+
-            '<button id="pBUSD" onclick="setPMon(\'USD\')" style="padding:9px;font-size:12px;font-weight:800;border:none;background:var(--sf2);color:var(--mut);cursor:pointer">u$ USD</button>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border:1.5px solid var(--br);border-radius:6px;overflow:hidden">'+
+            '<button id="pBARS" onclick="setPMon(\'ARS\')" style="padding:9px;font-size:11px;font-weight:800;border:none;background:rgba(251,191,36,.1);color:var(--ars);cursor:pointer">$ ARS</button>'+
+            '<button id="pBUSD" onclick="setPMon(\'USD\')" style="padding:9px;font-size:11px;font-weight:800;border:none;background:var(--sf2);color:var(--mut);cursor:pointer">u$ USD</button>'+
+            '<button id="pBUSDT" onclick="setPMon(\'USDT\')" style="padding:9px;font-size:11px;font-weight:800;border:none;background:var(--sf2);color:var(--mut);cursor:pointer">⚡ USDT</button>'+
           '</div>'+
         '</div>'+
         '<div class="fld"><label>Monto</label><input type="number" id="pMonto" placeholder="0,00" style="background:var(--sf2);border:1.5px solid var(--br);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:14px;font-weight:800"></div>'+
@@ -1346,6 +1359,7 @@ function renderProy(){
             '<th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--mut);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Monto</th>'+
             '<th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--ars);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Saldo ARS</th>'+
             '<th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--usd);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Saldo USD</th>'+
+            '<th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--usdt);text-transform:uppercase;position:sticky;top:0;border-bottom:1px solid var(--br)">Saldo USDT</th>'+
             '<th style="padding:7px 10px;position:sticky;top:0;border-bottom:1px solid var(--br)"></th>'+
           '</tr></thead><tbody>'+rows+'</tbody></table>'
         )+
@@ -1365,10 +1379,11 @@ function setPDir(d){
 }
 function setPMon(m){
   _pMon=m;
-  const ba=document.getElementById('pBARS'),bu=document.getElementById('pBUSD');
+  const ba=document.getElementById('pBARS'),bu=document.getElementById('pBUSD'),bt=document.getElementById('pBUSDT');
   if(!ba||!bu) return;
   ba.style.background=m==='ARS'?'rgba(251,191,36,.1)':'var(--sf2)'; ba.style.color=m==='ARS'?'var(--ars)':'var(--mut)';
   bu.style.background=m==='USD'?'rgba(52,211,153,.1)':'var(--sf2)'; bu.style.color=m==='USD'?'var(--usd)':'var(--mut)';
+  if(bt){ bt.style.background=m==='USDT'?'rgba(167,139,250,.1)':'var(--sf2)'; bt.style.color=m==='USDT'?'var(--usdt)':'var(--mut)'; }
 }
 function proyAgregar(){
   const fecha=document.getElementById('pFecha')?.value;
